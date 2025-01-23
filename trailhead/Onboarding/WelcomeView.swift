@@ -64,7 +64,6 @@ struct WelcomeView: View {
                 } label: {
                     Text("Get started")
                         .frame(maxWidth: .infinity)
-
                 }
                 .padding()
                 .background(.white)

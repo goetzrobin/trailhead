@@ -11,6 +11,7 @@ struct PhoneSignUpWrapperView<Content: View>: View {
     let title: String
     let onExit: () -> Void
     let content: () -> Content
+    let onBack: (() -> Void)?
 
     init(
         title: String,
@@ -20,35 +21,67 @@ struct PhoneSignUpWrapperView<Content: View>: View {
         self.title = title
         self.onExit = onExit
         self.content = content
+        self.onBack = nil
+    }
+
+    init(
+        title: String,
+        @ViewBuilder content: @escaping () -> Content,
+        onExit: @escaping () -> Void,
+        onBack: (() -> Void)?
+    ) {
+        self.title = title
+        self.onExit = onExit
+        self.content = content
+        self.onBack = onBack
     }
 
     var body: some View {
         VStack(alignment: .leading) {
-            HStack {
-                Spacer()
-                Button(action: self.onExit) {
-                    Label("Exit", systemImage: "xmark")
-                        .font(.system(size: 25))
-                        .labelStyle(.iconOnly)
-                        .padding(5)
-                }
-            }
-            .foregroundStyle(.foreground)
-            .buttonStyle(.borderless)
             Text(title)
                 .font(.largeTitle)
                 .bold()
             content()
         }
         .padding()
+        .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItemGroup(placement: .navigationBarLeading) {
+                Button(action: {
+                    self.onBack?()
+                }) {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(.system(size: 15))
+                        .labelStyle(.iconOnly)
+                        .padding(5)
+                }
+                .opacity(self.onBack == nil ? 0 : 1)
+                .disabled(self.onBack == nil)
+                .buttonStyle(.plain)
+            }
+
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                Button(action: self.onExit) {
+                    Label("Exit", systemImage: "xmark")
+                        .font(.system(size: 15))
+                        .labelStyle(.iconOnly)
+                        .padding(5)
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 }
 
 #Preview {
-    PhoneSignUpWrapperView(title: "Nobody likes reading their emails...") {
-        PhoneSignUpEnterNumberView()
-        .environment(PhoneSignUpStore())
-    } onExit: {
-        print("closing time")
+    NavigationStack {
+        PhoneSignUpWrapperView(title: "Nobody likes reading their emails...") {
+            PhoneSignUpEnterNumberView()
+                .environment(PhoneSignUpStore())
+        } onExit: {
+            print("closing time")
+        } onBack: {
+            print("back like we never left")
+        }
     }
 }

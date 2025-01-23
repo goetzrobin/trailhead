@@ -13,6 +13,8 @@ import Foundation
 
     var onCodeSent: (() -> Void)?
     var onCodeVerified: (() -> Void)?
+    
+    private(set) var codeVerified = false
 
 
     func setupCallbacks(onCodeSent: (() -> Void)?, onCodeVerified: (() -> Void)?) {
@@ -31,6 +33,7 @@ import Foundation
 
     func verifyCode() {
         print("Verify code: \(confirmationCode) for number \(phoneNumber)")
+        self.codeVerified = true
         self.onCodeVerified?()
     }
 }

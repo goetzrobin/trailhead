@@ -23,7 +23,6 @@ struct PhoneSignUpEnterNumberInputView: View {
     }
 
     var body: some View {
-        NavigationStack {
             HStack {
                 Button {
                     presentSheet = true
@@ -46,8 +45,6 @@ struct PhoneSignUpEnterNumberInputView: View {
                 .keyboardType(.phonePad)
                 .inputStyle()
             }
-
-        }
         .sheet(isPresented: $presentSheet) {
             NavigationView {
                 List(filteredResorts) { countryCode in
@@ -71,8 +68,8 @@ struct PhoneSignUpEnterNumberInputView: View {
                 .searchable(text: $searchCountry, prompt: "Your country")
             }
             .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
-        .presentationDetents([.medium, .large])
     }
 }
 

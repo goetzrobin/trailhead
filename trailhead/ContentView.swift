@@ -8,10 +8,12 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var navigationService = NavigationService()
     @State var isAuthenticated = false
 
     var body: some View {
         OnboardingView()
+            .environment(navigationService)
     }
 }
 

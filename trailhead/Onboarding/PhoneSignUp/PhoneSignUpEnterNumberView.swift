@@ -11,7 +11,6 @@ import Observation
 struct PhoneSignUpEnterNumberView: View {
     @Environment(PhoneSignUpStore.self) private var store
 
-
     var body: some View {
         @Bindable var store = self.store
         VStack {
