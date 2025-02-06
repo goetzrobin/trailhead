@@ -1,5 +1,5 @@
 //
-//  PhoneSignUpStore.swift
+//  UserOnboardingStore.swift
 //  trailhead
 //
 //  Created by Robin Götz on 1/15/25.

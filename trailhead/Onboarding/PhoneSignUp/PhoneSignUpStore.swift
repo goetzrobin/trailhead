@@ -9,15 +9,23 @@ import Foundation
 
 @Observable class PhoneSignUpStore {
     var phoneNumber = ""
+    var currentCountryCode: PhoneCountryCode = PhoneCountryCode.US
+
+    var unformattedPhoneNumber: String {
+        return
+            "\(self.currentCountryCode.dial_code)\(self.phoneNumber.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression))"
+    }
+
     var confirmationCode = ""
 
     var onCodeSent: (() -> Void)?
     var onCodeVerified: (() -> Void)?
-    
+
     private(set) var codeVerified = false
 
-
-    func setupCallbacks(onCodeSent: (() -> Void)?, onCodeVerified: (() -> Void)?) {
+    func setupCallbacks(
+        onCodeSent: (() -> Void)?, onCodeVerified: (() -> Void)?
+    ) {
         self.onCodeSent = onCodeSent
         self.onCodeVerified = onCodeVerified
     }

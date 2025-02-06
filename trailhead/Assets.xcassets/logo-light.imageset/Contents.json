@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "welcome-bball.jpg",
+      "filename" : "journai-light.svg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "welcome-bball 1.jpg",
+      "filename" : "journai-light 1.svg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "welcome-bball 2.jpg",
+      "filename" : "journai-light 2.svg",
       "idiom" : "universal",
       "scale" : "3x"
     }

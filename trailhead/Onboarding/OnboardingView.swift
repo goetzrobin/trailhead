@@ -8,250 +8,81 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    @Environment(NavigationService.self) var nav
-    @State var isUserConsentGiven = false
-
-    @State var phoneSignUpStore = PhoneSignUpStore()
-    func setupPhoneSignUpStoreCallbacks() {
-        self.phoneSignUpStore.setupCallbacks(
-            onCodeSent: {
-                self.nav.path.append(
-                    AppNavigationPath.onBoarding(.phoneSignUp(.verifyCode))
-                )
-            },
-            onCodeVerified: {
-                self.nav.path.append(
-                    AppNavigationPath.onBoarding(.phoneSignUp(.success))
-                )
-            }
-        )
-    }
-
-    @State var userOnboardingStore = UserOnboardingStore()
-    func setupUserOnboardingStoreCallbacks() {
-        print("bla")
-    }
-
-    @State var personalityOnboardingStore = PersonalityOnboardingStore()
+    @Environment(AppRouter.self) var router
+    @State private var isUserConsentGiven = false
+    @State private var isCodeVerified = false
 
     var body: some View {
-        @Bindable var nav = self.nav
-        NavigationStack(path: $nav.path) {
+        @Bindable var router = self.router
+        NavigationStack(path: $router.path) {
             WelcomeView {
                 if !self.isUserConsentGiven {
-                    self.nav.path.append(
-                        AppNavigationPath.onBoarding(.userConsent))
+                    self.router.path.append(
+                        OnboardingPath.userConsent)
                     return
                 }
-                if !self.phoneSignUpStore.codeVerified {
-                    self.nav.path.append(
-                        AppNavigationPath.onBoarding(
-                            .phoneSignUp(.enterNumber)))
+                if !self.isCodeVerified {
+                    self.router.path.append(OnboardingPath.phoneSignUp)
                     return
                 }
-                self.nav.path.append(
-                    AppNavigationPath.onBoarding(.userOnboarding(.name))
-                )
+                self.router.path.append(OnboardingPath.userOnboarding)
             }
-            .navigationDestination(for: AppNavigationPath.self) { currentStep in
+            .navigationDestination(for: OnboardingPath.self) {
+                currentStep in
                 switch currentStep {
-                case AppNavigationPath.onBoarding(.userConsent):
+                case .userConsent:
                     UserConsentView {
                         self.isUserConsentGiven = true
-                        self.nav.path.append(
-                            AppNavigationPath.onBoarding(
-                                .phoneSignUp(.enterNumber)))
-                    }
-                    .navigationBarBackButtonHidden()
-                case AppNavigationPath.onBoarding(
-                    .phoneSignUp(.enterNumber)):
-                    PhoneSignUpWrapperView(
-                        title: "Nobody likes reading their emails..."
-                    ) {
-                        PhoneSignUpEnterNumberView()
-                    } onExit: {
-                        self.nav.path = NavigationPath()
-                    }
-                case AppNavigationPath.onBoarding(
-                    .phoneSignUp(.verifyCode)):
-                    PhoneSignUpWrapperView(
-                        title: "Did you get your code? Enter it here!"
-                    ) {
-                        PhoneSignUpConfirmCodeView()
-                    } onExit: {
-                        self.nav.path = NavigationPath()
-                    } onBack: {
-                        self.nav.path.removeLast()
-
-                    }
-                case AppNavigationPath.onBoarding(.phoneSignUp(.success)):
-                    PhoneSignUpSuccessView {
-                        self.nav.path.append(
-                            AppNavigationPath.onBoarding(
-                                .userOnboarding(.name))
-                        )
+                        self.router.path.append(
+                            OnboardingPath.phoneSignUp)
                     }
                     .navigationBarBackButtonHidden()
 
-                case AppNavigationPath.onBoarding(
-                    .userOnboarding(.name)):
-                    UserOnboardingNameView(
-                        onBack: {
-                            self.nav.path = NavigationPath()
+                case .phoneSignUp:
+                    PhoneSignUpFlowView(
+                        onExit: {
+                            self.router.path.removeLast(self.router.path.count)
                         },
-                        onContinue: {
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .userOnboarding(.pronouns))
+                        onCodeVerified: {
+                            self.isCodeVerified = true
+                        },
+                        onFlowComplete: {
+                            self.router.path.append(
+                                OnboardingPath.userOnboarding
                             )
                         })
-
-                case AppNavigationPath.onBoarding(
-                    .userOnboarding(.pronouns)):
-                    UserOnboardingPronounsView(
-                        onBack: {
-                            self.nav.path.removeLast()
-                        },
-                        onSkip: {
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .userOnboarding(.birthday))
+                case .userOnboarding:
+                    UserOnboardingFlowView(
+                        onFlowComplete: {
+                            self.router.path.append(
+                                OnboardingPath
+                                    .personalityOnboarding
                             )
-                        },
-                        onContinue: {
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .userOnboarding(.birthday))
-                            )
-                        }
-                    )
-
-                case AppNavigationPath.onBoarding(
-                    .userOnboarding(.birthday)):
-                    UserOnboardingBirthdayView(
-                        onBack: {
-                            self.nav.path.removeLast()
-                        },
-                        onSkip: {
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .personalityOnboarding(.intro))
-                            )
-                        },
-                        onContinue: {
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .personalityOnboarding(.intro))
-                            )
-                        }
-                    )
-
-                case AppNavigationPath.onBoarding(
-                    .personalityOnboarding(.intro)):
-                    PersonalityOnboardingIntroView {
-                        self.personalityOnboardingStore.updateCurrentPath(
-                            .excitedAbout)
-                        self.nav.path.append(
-                            AppNavigationPath.onBoarding(
-                                .personalityOnboarding(.excitedAbout)))
-                    }
+                        })
+                        .navigationBarBackButtonHidden()
+                case .personalityOnboarding:
+                    PersonalityOnboardingFlowView(onFlowComplete: {
+                        self.router.path.append(
+                            OnboardingPath
+                                .oneMoreThing
+                        )
+                    })
                     .navigationBarBackButtonHidden()
 
-                case AppNavigationPath.onBoarding(
-                    .personalityOnboarding(.excitedAbout)):
-                    PersonalityOnboardingExcitedAboutView(
-                        onBack: {
-                            self.personalityOnboardingStore.updateCurrentPath(
-                                .intro)
-                            self.nav.path.removeLast()
-                        },
-                        onSkip: {
-                            self.personalityOnboardingStore.updateCurrentPath(
-                                .mentorQualities)
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .personalityOnboarding(
-                                        .mentorQualities)))
-                        },
-                        onContinue: {
-                            self.personalityOnboardingStore.updateCurrentPath(
-                                .mentorQualities)
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .personalityOnboarding(
-                                        .mentorQualities)))
-                        }
-                    )
-
-                case AppNavigationPath.onBoarding(
-                    .personalityOnboarding(.mentorQualities)):
-                    PersonalityOnboardingMentorQualitiesView(
-                        onBack: {
-                            self.personalityOnboardingStore.updateCurrentPath(
-                                .excitedAbout)
-                            self.nav.path.removeLast()
-                        },
-                        onSkip: {
-                            self.personalityOnboardingStore.updateCurrentPath(
-                                .beLikeYou(.overview))
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .personalityOnboarding(
-                                        .beLikeYou(.overview))))
-                        },
-                        onContinue: {
-                            self.personalityOnboardingStore.updateCurrentPath(
-                                .beLikeYou(.overview))
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(
-                                    .personalityOnboarding(
-                                        .beLikeYou(.overview))))
-
-                        }
-                    )
-
-                case AppNavigationPath.onBoarding(
-                    .personalityOnboarding(.beLikeYou(.overview))):
-                    PersonalityOnboardingBeLikeYouView(
-                        onBack: {
-                            self.personalityOnboardingStore.updateCurrentPath(
-                                .mentorQualities)
-                            self.nav.path.removeLast()
-                        },
-                        onSkip: {
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(.oneMoreThing))
-                        },
-                        onContinue: {
-                            self.nav.path.append(
-                                AppNavigationPath.onBoarding(.oneMoreThing))
-                        }
-                    )
-                case AppNavigationPath.onBoarding(
-                    .oneMoreThing
-                ):
+                case .oneMoreThing:
                     OneMoreThingView {
-                        self.nav.path.append(
-                            AppNavigationPath.onBoarding(.welcome))
+                        self.router.path.removeLast(
+                            self.router.path.count)
                     }
-
-                default:
-                    EmptyView()
                 }
             }
-        }
-
-        .environment(self.phoneSignUpStore)
-        .environment(self.userOnboardingStore)
-        .environment(self.personalityOnboardingStore)
-        .onAppear {
-            self.setupPhoneSignUpStoreCallbacks()
-            self.setupUserOnboardingStoreCallbacks()
+            .onChange(of: router.path) { oldValue, newValue in
+                print("\(newValue)")
+            }
         }
     }
 }
 
 #Preview {
-    OnboardingView()
-        .environment(NavigationService())
+    OnboardingView().environment(AppRouter())
 }

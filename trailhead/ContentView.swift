@@ -8,12 +8,22 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var navigationService = NavigationService()
-    @State var isAuthenticated = false
+    @State private var appRouter = AppRouter()
+    @State var isAuthenticated = true
 
     var body: some View {
-        OnboardingView()
-            .environment(navigationService)
+        if isAuthenticated {
+            NavigationStack(path: $appRouter.path) {
+                ApplicationView()
+                    .navigationBarBackButtonHidden()
+                    .environment(appRouter)
+            }
+        } else {
+            NavigationStack(path: $appRouter.path) {
+                OnboardingView()
+                    .environment(appRouter)
+            }
+        }
     }
 }
 
