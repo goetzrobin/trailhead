@@ -11,7 +11,7 @@ import SwiftUI
 enum OnboardingPath: Hashable {
     //         empty -> welcome
     case userConsent
-    case phoneSignUp
+    case signUp
     case userOnboarding
     case personalityOnboarding
     case oneMoreThing

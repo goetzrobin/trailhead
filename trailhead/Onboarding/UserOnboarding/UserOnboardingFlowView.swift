@@ -7,10 +7,10 @@
 import SwiftUI
 
 struct UserOnboardingFlowView: View {
-    @Environment(AppRouter.self) var router
-    @State var userOnboardingStore = UserOnboardingStore()
-
+    let router: AppRouter
     let onFlowComplete: () -> Void
+    
+    @State var userOnboardingStore = UserOnboardingStore()
 
     var body: some View {
         UserOnboardingNameView(
@@ -60,7 +60,7 @@ struct UserOnboardingFlowView: View {
     }
 }
 #Preview {
-    UserOnboardingFlowView {
+    UserOnboardingFlowView(router: AppRouter()) {
         print("Flow complete")
-    }.environment(AppRouter())
+    }
 }

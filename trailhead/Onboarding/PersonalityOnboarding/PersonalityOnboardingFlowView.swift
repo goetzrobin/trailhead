@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct PersonalityOnboardingFlowView: View {
-    @Environment(AppRouter.self) var router
+    let router: AppRouter
+    let onFlowComplete: () -> Void
+
     @State var progressStore = PersonalityOnboardingProgressStore()
     @State var excitedAboutStore = PersonalityOnboardingExcitedAboutStore()
     @State var mentorQualitiesStore =
         PersonalityOnboardingMentorQualitiesStore()
     @State var beLikeYouStore =
         PersonalityOnboardingBeLikeYouStore()
-
-    let onFlowComplete: () -> Void
 
     var body: some View {
         PersonalityOnboardingIntroView {
@@ -106,8 +106,8 @@ struct PersonalityOnboardingFlowView: View {
 #Preview {
     @Bindable var router = AppRouter()
     NavigationStack(path: $router.path) {
-        PersonalityOnboardingFlowView {
+        PersonalityOnboardingFlowView(router: router) {
             print("Completed flow")
-        }.environment(router)
+        }
     }
 }

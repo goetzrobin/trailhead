@@ -16,38 +16,42 @@ struct MessageViewModel {
 
     var id: String { message.id }
     var content: String { message.content }
-    var type: BaseMessageType { message.type }
+    var type: ChatMessageType { message.type }
 }
 
 enum MessageStreamState {
     case stored
-    case streaming(ThinkingState)
-
-    struct ThinkingState {
-        let isThinking: Bool
-        let elapsedTime: TimeInterval?
-        let thinkingTime: TimeInterval?
-    }
+    case streaming(StreamState)
 }
 
 // MARK: - Store
 
 @Observable class ChatMessageStore {
     // MARK: - State
-    private var storedMessages: [StoredMessage] = []
-    private var streamingMessages: [StreamingMessage] = []
-    private var streamState: StreamState = .idle
+    var storedMessages: [StoredMessage] {
+        self.messageApiClient.fetchMessagesStatus.data ?? []
+    }
+    private(set) var streamingMessages: [StreamingMessage] = []
+    private(set) var streamState: StreamState = .idle
 
     // MARK: - Dependencies
-    private let apiClient: ChatMessageAPIClient
-    private let thinkingState: ThinkingStateStore
+    private let sessionApiClient: SessionAPIClient
+    private let authProvider: AuthorizationProvider
+    private let messageApiClient: ChatMessageAPIClient
     private let throttler: StreamThrottler
+
+    private let slug: String
+    private let userId: UUID
+    
+    private var sessionLogId: UUID?
 
     // MARK: - Stream Control
     private var streamTask: Task<Void, Never>?
 
-    // MARK: - Public Interface
-
+    var isLoadingStoredMessages: Bool {
+        self.messageApiClient.fetchMessagesStatus == .loading
+    }
+   
     var messages: [MessageViewModel] {
         let stored = storedMessages.map {
             MessageViewModel(
@@ -59,12 +63,7 @@ enum MessageStreamState {
         let streaming = streamingMessages.map {
             MessageViewModel(
                 message: $0,
-                streamState: .streaming(
-                    MessageStreamState.ThinkingState(
-                        isThinking: thinkingState.isThinking,
-                        elapsedTime: thinkingState.elapsedTime,
-                        thinkingTime: thinkingState.thinkingTime
-                    ))
+                streamState: .streaming(.idle)
             )
         }
 
@@ -73,10 +72,7 @@ enum MessageStreamState {
         }
     }
 
-    var isThinking: Bool { thinkingState.isThinking }
-    var elapsedTime: TimeInterval? { thinkingState.elapsedTime }
-    var thinkingTime: TimeInterval? { thinkingState.thinkingTime }
-    var isStreaming: Bool { streamState.isStreaming }
+    var isStreaming: Bool { streamState.isStarting }
 
     var errorMessage: String? {
         if case .error(let message) = streamState {
@@ -88,15 +84,23 @@ enum MessageStreamState {
     // MARK: - Initialization
 
     init(
-        apiClient: ChatMessageAPIClient = ChatMessageAPIClient(),
-        thinkingState: ThinkingStateStore = ThinkingStateStore(),
+        sessionApiClient: SessionAPIClient,
+        authProvider: AuthorizationProvider,
+        userId: UUID,
+        slug: String,
+        sessionLogId: UUID?,
         throttler: StreamThrottler = StreamThrottler()
     ) {
-        self.apiClient = apiClient
-        self.thinkingState = thinkingState
+        self.sessionApiClient = sessionApiClient
+        self.authProvider = authProvider
         self.throttler = throttler
 
-        loadInitialMessages()
+        self.userId = userId
+        self.sessionLogId = sessionLogId
+        self.slug = slug
+
+        let apiClient = ChatMessageAPIClient(authProvider: authProvider)
+        self.messageApiClient = apiClient
 
         Task {
             await throttler.setCallback { [weak self] chunk in
@@ -105,48 +109,102 @@ enum MessageStreamState {
         }
     }
 
-    private func loadInitialMessages() {
+    func loadInitialMessages() {
         Task {
-            do {
-                storedMessages = try await apiClient.fetchMessages()
-                streamingMessages = []  // Clear any streaming messages on reload
-            } catch {
-                streamState = .error(error.localizedDescription)
+            guard let sessionLogId = self.sessionLogId else {
+                print(
+                    "No session log id passed in, unable to load initial messages"
+                )
+                return
             }
+            self.messageApiClient.fetchStoredMessages(for: sessionLogId)
+            streamingMessages = []  // Clear any streaming messages on reload
         }
+    }
+    
+    func startSession(with scores: SessionScores, onSuccess: ((_: SessionLog) -> Void)?) {
+        self.sessionApiClient.startSession(with: slug, for: userId, scores: scores) {
+            newSessionLog in
+            print("new session log with id \(newSessionLog.id)")
+            self.sessionLogId = newSessionLog.id
+            onSuccess?(newSessionLog)
+        }
+    }
+    
+    func endSession(with scores: SessionScores, onSuccess: ((_: SessionLog) -> Void)?) {
+        guard let sessionLogId = self.sessionLogId else {
+            print("no session log id, cant end session")
+            return
+        }
+        self.sessionApiClient.endSession(ofLogWithId: sessionLogId, scores: scores) {
+            endedSessionLog in
+            onSuccess?(endedSessionLog)
+        }
+    }
+    
+    func refreshSessionsAndLogs() {
+        self.sessionApiClient.fetchSessionsWithLogs(for: userId)
     }
 
     // MARK: - Message Handling
-
-    func sendMessage(with inputText: String, onStreamStart: (() -> Void)? = nil)
+    func sendMessage(
+        with inputText: String,
+        type: String = "user-message",
+        scope: String = "external",
+        onStreamStart: (() -> Void)? = nil
+    )
         async
     {
         let sanitizedInput = inputText.trimmingCharacters(
             in: .whitespacesAndNewlines)
-        guard !sanitizedInput.isEmpty else { return }
+        guard !sanitizedInput.isEmpty
+        else {
+            print(
+                "some arguments missing: \(sanitizedInput), \(String(describing: userId)), \(String(describing: slug))")
+            return
+        }
 
         // Create temporary user message
         let tempId = UUID().uuidString
         let userMessage = StreamingMessage.createForUser(
             id: tempId,
-            content: sanitizedInput
+            content: sanitizedInput,
+            scope: ChatMessageScope(rawValue: scope) ?? .external
         )
         streamingMessages.append(userMessage)
 
         await startStreaming(
-            message: sanitizedInput, onStreamStart: onStreamStart ?? {})
+            userId: userId,
+            message: sanitizedInput,
+            slug: slug,
+            type: type,
+            scope: scope,
+            onStreamStart: onStreamStart ?? {})
+    }
+    
+    func haveSamReachOut(        onStreamStart: (() -> Void)? = nil
+) async {
+        await self.sendMessage(with: "The user has started the conversation",
+        type: "ai-message",
+               scope: "internal")
     }
 
+
     private func startStreaming(
-        message: String, onStreamStart: @escaping () -> Void
+        userId: UUID,
+        message: String,
+        slug: String,
+        type: String = "user-message",
+        scope: String = "external",
+        onStreamStart: @escaping () -> Void
     ) async {
         streamState = .starting
-        thinkingState.isActive = true
 
         streamTask = Task {
             do {
-                for try await event in try await apiClient.streamResponse(
-                    message)
+                for try await event in try await self.messageApiClient.streamResponse(
+                    message: message, messageType: type, scope: scope,
+                    userId: userId, slug: slug)
                 {
                     streamState = .streaming
 
@@ -154,6 +212,7 @@ enum MessageStreamState {
                         event, onStreamStart: onStreamStart)
                 }
             } catch {
+                print(error)
                 await MainActor.run {
                     streamState = .error(error.localizedDescription)
                     cleanup()
@@ -164,35 +223,36 @@ enum MessageStreamState {
         await streamTask?.value
     }
 
-    private func handleStreamEvent(_ data: String, onStreamStart: () -> Void)
-        async throws
-    {
-        let event = try ChatMessageAPIClient.parseStreamEvent(data)
-
-        switch event {
-        case .start:
-            await MainActor.run {
-                onStreamStart()
-            }
-
-        case .chunk(let chunk):
-            await throttler.enqueueChunk(chunk)
-
-        case .done:
-            await MainActor.run {
-                streamState = .done
-                cleanup()
-            }
-
-        case .error(let error):
-            await MainActor.run {
-                streamState = .error(error.localizedDescription)
-                cleanup()
+    private func handleStreamEvent(_ data: String, onStreamStart: () -> Void) async throws {
+        let events = ChatMessageAPIClient.parseStreamEvents(data)
+        
+        for event in events {
+            
+            switch event {
+            case .start:
+                await MainActor.run {
+                    onStreamStart()
+                }
+                
+            case .chunk(let chunk):
+                await throttler.enqueueChunk(chunk)
+                
+            case .done:
+                await MainActor.run {
+                    streamState = .done
+                    cleanup()
+                }
+                
+            case .error(let error):
+                await MainActor.run {
+                    streamState = .error(error.localizedDescription)
+                    cleanup()
+                }
             }
         }
     }
 
-    private func handleChunk(_ chunk: BaseMessageChunk) {
+    private func handleChunk(_ chunk: ChatMessageChunk) {
         // Find or create streaming message for this chunk
         if let index = streamingMessages.firstIndex(where: {
             $0.runId == chunk.runId
@@ -213,9 +273,9 @@ enum MessageStreamState {
     }
 
     private func cleanup() {
-        thinkingState.isActive = false
         streamTask?.cancel()
         streamTask = nil
+        streamState = .idle
     }
 
     func cancelStream() {
@@ -237,9 +297,9 @@ enum StreamState {
     case error(String)
     case done
 
-    var isStreaming: Bool {
+    var isStarting: Bool {
         switch self {
-        case .starting, .streaming:
+        case .starting:
             return true
         default:
             return false

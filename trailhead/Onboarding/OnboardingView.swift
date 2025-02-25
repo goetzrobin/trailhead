@@ -8,21 +8,27 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    @Environment(AppRouter.self) var router
+    @Binding var showingAuth: Bool
+
+    let auth: AuthStore
+    let onOnboardingComplete: () -> Void
+
+    @State var router = AppRouter()
     @State private var isUserConsentGiven = false
-    @State private var isCodeVerified = false
+    @State private var isSignUpCompleted = false
 
     var body: some View {
-        @Bindable var router = self.router
         NavigationStack(path: $router.path) {
             WelcomeView {
+                self.showingAuth = true
+            } onTap: {
                 if !self.isUserConsentGiven {
                     self.router.path.append(
                         OnboardingPath.userConsent)
                     return
                 }
-                if !self.isCodeVerified {
-                    self.router.path.append(OnboardingPath.phoneSignUp)
+                if !self.isSignUpCompleted {
+                    self.router.path.append(OnboardingPath.signUp)
                     return
                 }
                 self.router.path.append(OnboardingPath.userOnboarding)
@@ -34,17 +40,19 @@ struct OnboardingView: View {
                     UserConsentView {
                         self.isUserConsentGiven = true
                         self.router.path.append(
-                            OnboardingPath.phoneSignUp)
+                            OnboardingPath.signUp)
                     }
                     .navigationBarBackButtonHidden()
 
-                case .phoneSignUp:
-                    PhoneSignUpFlowView(
+                case .signUp:
+                    SignUpFlowView(
+                        auth: auth,
+                        router: self.router,
                         onExit: {
                             self.router.path.removeLast(self.router.path.count)
                         },
-                        onCodeVerified: {
-                            self.isCodeVerified = true
+                        onSignUpSuccess: {
+                            self.isSignUpCompleted = true
                         },
                         onFlowComplete: {
                             self.router.path.append(
@@ -53,36 +61,39 @@ struct OnboardingView: View {
                         })
                 case .userOnboarding:
                     UserOnboardingFlowView(
+                        router: self.router,
                         onFlowComplete: {
                             self.router.path.append(
                                 OnboardingPath
                                     .personalityOnboarding
                             )
-                        })
-                        .navigationBarBackButtonHidden()
+                        }
+                    )
+                    .navigationBarBackButtonHidden()
                 case .personalityOnboarding:
-                    PersonalityOnboardingFlowView(onFlowComplete: {
-                        self.router.path.append(
-                            OnboardingPath
-                                .oneMoreThing
-                        )
-                    })
+                    PersonalityOnboardingFlowView(
+                        router: self.router,
+                        onFlowComplete: {
+                            self.router.path.append(
+                                OnboardingPath
+                                    .oneMoreThing
+                            )
+                        }
+                    )
                     .navigationBarBackButtonHidden()
 
                 case .oneMoreThing:
                     OneMoreThingView {
-                        self.router.path.removeLast(
-                            self.router.path.count)
+                        onOnboardingComplete()
                     }
                 }
-            }
-            .onChange(of: router.path) { oldValue, newValue in
-                print("\(newValue)")
             }
         }
     }
 }
 
 #Preview {
-    OnboardingView().environment(AppRouter())
+    OnboardingView(showingAuth: .constant(false), auth: AuthStore()) {
+        print("onboarding completed")
+    }
 }

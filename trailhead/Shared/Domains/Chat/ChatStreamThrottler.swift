@@ -1,22 +1,22 @@
 import Foundation
 
 actor StreamThrottler {
-    private var queue: [BaseMessageChunk] = []
+    private var queue: [ChatMessageChunk] = []
     private var isProcessing = false
     private let maxChunksPerSecond: Double
     private let randomVariation: Double
-    private var callback: ((BaseMessageChunk) -> Void)?
+    private var callback: ((ChatMessageChunk) -> Void)?
     
-    init(maxChunksPerSecond: Double = 10, randomVariation: Double = 0.4) {
+    init(maxChunksPerSecond: Double = 1000, randomVariation: Double = 0.4) {
         self.maxChunksPerSecond = maxChunksPerSecond
         self.randomVariation = randomVariation
     }
     
-    func setCallback(_ callback: @escaping (BaseMessageChunk) -> Void) {
+    func setCallback(_ callback: @escaping (ChatMessageChunk) -> Void) {
         self.callback = callback
     }
     
-    func enqueueChunk(_ chunk: BaseMessageChunk) {
+    func enqueueChunk(_ chunk: ChatMessageChunk) {
         queue.append(chunk)
         processQueueIfNeeded()
     }

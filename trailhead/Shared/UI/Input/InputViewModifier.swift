@@ -12,8 +12,8 @@ struct InputStyle: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .padding(20)
-            .frame(minWidth: 80, minHeight: 47)
+            .padding(18)
+            .frame(minWidth: 80, minHeight: 48)
             .background(
                 .ultraThinMaterial,
                 in: RoundedRectangle(

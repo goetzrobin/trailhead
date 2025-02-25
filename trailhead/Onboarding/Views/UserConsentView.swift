@@ -12,7 +12,7 @@ struct UserConsentView: View {
     let onTap: () -> Void
     
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false){
             VStack(alignment: .leading) {
                 VStack(alignment: .leading, spacing: 5) {
                     Image(colorScheme == .light ? "logo-dark" : "logo-light")
@@ -21,6 +21,7 @@ struct UserConsentView: View {
                         .frame(height: 45)
                     Text("Terms & Privacy")
                         .font(.title)
+                        .bold()
                         .padding(.bottom)
                 }
                 VStack(alignment: .leading, spacing: 5) {
@@ -48,6 +49,7 @@ struct UserConsentView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.jPrimary)
+                    .padding(.bottom)
                 }
             }
             .padding()

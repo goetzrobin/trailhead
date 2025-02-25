@@ -5,6 +5,7 @@
 //  Created by Robin Götz on 1/14/25.
 //
 import Foundation
+
 extension Bundle {
     func decode<T: Decodable>(_ file: String) -> T {
         guard let url = self.url(forResource: file, withExtension: nil) else {

@@ -6,148 +6,200 @@
 //
 import Foundation
 
-class ChatMessageAPIClient {
-    // Mock history now uses StoredMessage
-    private let mockHistory: [StoredMessage] = [
-        StoredMessage(
-            id: "hist_1",
-            content:
-                "Can you help me understand how to structure a SwiftUI app?",
-            type: .userMessage,
-            scope: .external,
-            createdAt: Date().addingTimeInterval(-3600),
-            formatVersion: .v1,
-            currentStep: nil,
-            stepRepetitions: nil
-        ),
-        StoredMessage(
-            id: "hist_2",
-            content:
-                "Let me outline the key components of a well-structured SwiftUI app:\n\n1. Views: Your UI components\n2. ViewModels: Business logic and state management\n3. Models: Data structures\n4. Services: Network and data operations",
-            type: .aiMessage,
-            scope: .external,
-            createdAt: Date().addingTimeInterval(-3500),
-            formatVersion: .v1,
-            currentStep: nil,
-            stepRepetitions: nil
-        ),
-    ]
+enum ChatAPIError: Error {
+    case invalidEventFormat
+    case invalidChunkData
+    case messagesNotFound
+}
 
-    // Mock responses to simulate streaming
-    private let mockResponses = [
-        "Based on your previous questions, let me elaborate on ViewModels in SwiftUI: They serve as the bridge between your UI and data layer, managing state and business logic.",
-        "Let's look at a practical example:\n\n1. Use @Observable for your ViewModels\n2. Keep your Views focused on UI\n3. Leverage dependency injection",
-        "The key to mastering SwiftUI is understanding the data flow. Start with small, focused components and gradually build up complexity.",
-    ]
+class StreamDelegate: NSObject, URLSessionDataDelegate {
+    var continuation: AsyncStream<String>.Continuation?
 
-    func streamResponse(_ message: String) async throws -> AsyncStream<String> {
-        AsyncStream { continuation in
-            Task {
-                // Start stream
-                continuation.yield("data: [START]")
-                try? await Task.sleep(for: .seconds(0.5))
+    func urlSession(
+        _ session: URLSession, dataTask: URLSessionDataTask,
+        didReceive data: Data
+    ) {
+        if let text = String(data: data, encoding: .utf8) {
+            continuation?.yield(text)  // Stream chunks as they arrive
+        }
+    }
 
-                // Generate IDs for this interaction
-                let runId = UUID().uuidString
-                let llmInteractionId = UUID().uuidString
-                let createdAt = Date()
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask,
+        didCompleteWithError error: Error?
+    ) {
+        if let error = error {
+            continuation?.yield(
+                "data: [ERROR] Server error: \(error.localizedDescription)")
+        }
+        continuation?.finish()  // Signal end of stream
+    }
+}
 
-                try? await Task.sleep(for: .seconds(1))
+@Observable class ChatMessageAPIClient {
+    private let session: URLSession
+    private let authProvider: AuthorizationProvider
 
-                // Get random response
-                let response = mockResponses.randomElement() ?? mockResponses[0]
+    /// - Parameters:
+    ///   - session: Defaults to `URLSession.shared`, but can be injected for testing.
+    ///   - authProvider: Anything that gives you an authorization header string.
+    init(
+        session: URLSession = .shared,
+        authProvider: AuthorizationProvider
+    ) {
+        self.session = session
+        self.authProvider = authProvider
+    }
 
-                // Convert response to array of characters
-                let characters = Array(response)
-                var currentIndex = 0
-                
-                // Stream response in variable-sized chunks
-                while currentIndex < characters.count {
-                    // Generate random chunk size between 3 and 5
-                    let remainingChars = characters.count - currentIndex
-                    let maxChunkSize = min(5, remainingChars)
-                    let chunkSize = min(maxChunkSize, Int.random(in: 3...5))
+    func streamResponse(
+        message: String,
+        messageType: String,
+        scope: String,
+        userId: UUID,
+        slug: String
+    ) async throws -> AsyncStream<String> {
+        guard
+            let url = URL(
+                string: "\(env.API_ROOT_URL)/api/sessions/slug/\(slug)")
+        else {
+            throw URLError(.badURL)
+        }
 
-                    // Extract chunk
-                    let endIndex = min(
-                        currentIndex + chunkSize, characters.count)
-                    let chunk = String(characters[currentIndex..<endIndex])
+        let requestBody: [String: Any] = [
+            "message": message,
+            "type": messageType,
+            "scope": scope,
+            "userId": userId.uuidString.lowercased(),
+        ]
 
-                    let messageChunk = BaseMessageChunk(
-                        id: llmInteractionId,
-                        runId: runId,
-                        type: .aiMessage,
-                        scope: .external,
-                        chunkType: "text",
-                        textDelta: chunk,
-                        createdAt: createdAt,
-                        toolCallId: nil,
-                        toolName: nil,
-                        args: nil,
-                        result: nil,
-                        currentStep: nil,
-                        stepRepetitions: nil
-                    )
+        guard
+            let jsonData = try? JSONSerialization.data(
+                withJSONObject: requestBody)
+        else {
+            throw URLError(.cannotParseResponse)
+        }
 
-                    if let data = try? JSONEncoder().encode(messageChunk),
-                        let json = String(data: data, encoding: .utf8)
-                    {
-                        continuation.yield("data: \(json)")
-                        try? await Task.sleep(for: .seconds(0.05))
-                    }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(
+            authProvider.authorizationHeader(),
+            forHTTPHeaderField: "Authorization")
+        request.httpBody = jsonData
 
-                    currentIndex = endIndex
+        let delegate = StreamDelegate()
+        let session = URLSession(
+            configuration: .default, delegate: delegate, delegateQueue: .main)
+
+        return AsyncStream { continuation in
+            delegate.continuation = continuation
+
+            let task = session.dataTask(with: request)
+
+            // Hold strong reference to delegate to prevent premature deallocation
+            continuation.onTermination = { _ in
+                // Clean up if needed
+            }
+
+            task.resume()
+        }
+    }
+
+    static func parseStreamEvents(_ data: String) -> [StreamEvent] {
+        // Split by newlines and filter out empty lines
+        let chunks = data.components(separatedBy: "\n").filter { !$0.isEmpty }
+
+        return chunks.compactMap { chunk in
+            guard chunk.hasPrefix("data: ") else {
+                print("\(chunk) has invalid format")
+                return nil
+            }
+
+            let content = String(chunk.dropFirst(6))
+            guard !content.isEmpty else { return nil }
+
+            switch content {
+            case "[START]":
+                return .start
+            case "[DONE]":
+                return .done
+            default:
+                guard let jsonData = content.data(using: .utf8),
+                    let chunk = try? JSONDecoder().decode(
+                        ChatMessageChunk.self, from: jsonData)
+                else {
+                    print("Failed to decode: \(content)")
+                    return nil
                 }
-
-                try? await Task.sleep(for: .seconds(0.5))
-                continuation.yield("data: [DONE]")
-                continuation.finish()
+                return .chunk(chunk)
             }
         }
     }
 
-    func fetchMessages() async throws -> [StoredMessage] {
-        try await Task.sleep(for: .seconds(0.5))  // Simulate network delay
-        return mockHistory
-    }
+    /// Publishes the current state of fetching stored messages.
+    var fetchMessagesStatus: ResponseStatus<[StoredMessage]> = .idle
 
-    static func parseStreamEvent(_ data: String) throws -> StreamEvent {
-        guard data.hasPrefix("data: ") else {
-            throw APIError.invalidEventFormat
-        }
+    /// Fetches all stored messages for a given session log.
+    /// Calls `/api/session-logs/{sessionLogId}/messages` and decodes into `[StoredMessage]` model.
+    func fetchStoredMessages(for sessionLogId: UUID) {
+        fetchMessagesStatus = .loading
 
-        let content = String(data.dropFirst(6))
-        guard !content.isEmpty else { throw APIError.invalidChunkData }
+        let endpoint = URL(string: env.API_ROOT_URL)!
+            .appendingPathComponent("api")
+            .appendingPathComponent("session-logs")
+            .appendingPathComponent(sessionLogId.uuidString.lowercased())
+            .appendingPathComponent("messages")  // /api/session-logs/{sessionLogId}/messages
 
-        switch content {
-        case "[START]":
-            return .start
-        case "[DONE]":
-            return .done
-        default:
-            guard let jsonData = content.data(using: .utf8),
-                let chunk = try? JSONDecoder().decode(
-                    BaseMessageChunk.self, from: jsonData)
-            else {
-                throw APIError.invalidChunkData
+        var request = URLRequest(url: endpoint)
+        request.httpMethod = "GET"
+        request.setValue(
+            authProvider.authorizationHeader(),
+            forHTTPHeaderField: "Authorization")
+
+        session.dataTask(with: request) { data, response, error in
+            // Handle request failure
+            if let error = error {
+                DispatchQueue.main.async {
+                    print("Request error:", error)
+                    self.fetchMessagesStatus = .error(error)
+                }
+                return
             }
-            return .chunk(chunk)
+
+            // Handle missing data
+            guard let data = data else {
+                print("Error: No messages found")
+                self.fetchMessagesStatus = .error(
+                    ChatAPIError.messagesNotFound)
+
+                return
+            }
+
+            print("decoding response")
+
+            // Decode JSON response
+            do {
+                let messages = try JSONDecoder().decode(
+                    [StoredMessage].self, from: data)
+                print("messages decoded")
+                self.fetchMessagesStatus = .success(messages)
+                print("fetchmessages status updated")
+            } catch {
+                print("Decoding error:", error)
+                self.fetchMessagesStatus = .error(error)
+
+            }
         }
+        .resume()
     }
+
 }
 
 // MARK: - Helper Types
 
 enum StreamEvent {
     case start
-    case chunk(BaseMessageChunk)
+    case chunk(ChatMessageChunk)
     case done
     case error(Error)
-}
-
-// MARK: - Errors
-
-enum APIError: Error {
-    case invalidEventFormat
-    case invalidChunkData
 }

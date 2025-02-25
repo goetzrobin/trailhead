@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct WelcomeView: View {
+    let onSignInTap: (() -> Void)?
     let onTap: () -> Void
 
     var body: some View {
@@ -28,7 +29,7 @@ struct WelcomeView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-
+            
             VStack(spacing: 30) {
                 VStack(spacing: 0) {
                     Image("logo-light")
@@ -42,40 +43,53 @@ struct WelcomeView: View {
                         .bold()
                 }
                 Spacer()
-                VStack(alignment: .leading, spacing: 5) {
-                    VStack(alignment: .leading, spacing: -4) {
-                        Text("Someone in your corner.")
-                            .foregroundColor(.white)
-                            .font(.title)
-                            .bold()
-                        Text("Always.")
-                            .foregroundColor(.white)
-                            .font(.title)
-                            .bold()
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: -4) {
+                            Text("Someone in your corner.")
+                                .foregroundColor(.white)
+                                .font(.title)
+                                .bold()
+                            Text("Always.")
+                                .foregroundColor(.white)
+                                .font(.title)
+                                .bold()
+                        }
+                        Text(
+                            "Personal guidance for life's biggest moments and daily decisions."
+                        )
+                        .foregroundColor(.white.opacity(0.7))
                     }
-                    Text(
-                        "Personal guidance for life's biggest moments and daily decisions."
-                    )
-                    .foregroundColor(.white.opacity(0.7))
-                    .frame(maxWidth: 340)
+                    
+                    Button {
+                        self.onTap()
+                    } label: {
+                        Text("Get started")
+                            .bold()
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.jWhite)
+                    .padding(.bottom, 20)
+                    Button {
+                        self.onSignInTap?()
+                    } label: {
+                        Text("I already have an account")
+                            .bold()
+                            .frame(maxWidth: .infinity)
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom)
                 }
-                Button {
-                    self.onTap()
-                } label: {
-                    Text("Get started")
-                        .bold()
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.jWhite)
-                .frame(maxWidth: 340)
-                .padding(.bottom)
-            }
+            }.padding(.horizontal)
         }
     }
 }
 
 #Preview {
     WelcomeView {
+        print("Welcome")
+    } onTap: {
         print("Hello")
     }
 }
