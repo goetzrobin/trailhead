@@ -5,8 +5,36 @@
 //  Created by Robin Götz on 2/17/25.
 //
 
+import Foundation
+
 final class env {
-    public static var SUPABASE_URL = "https://sxtpdrbqkflduazyzuga.supabase.co"
-    public static var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4dHBkcmJxa2ZsZHVhenl6dWdhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjAxMDc4ODYsImV4cCI6MjAzNTY4Mzg4Nn0.xJmCk1BoDw0iMKBWeQs4mskXcD2oxLGsEal5vYmHPI4"
-    public static var API_ROOT_URL = "http://localhost:3000"
+    public static let SUPABASE_URL: String = {
+        guard
+            let supabaseUrl = Bundle.main.infoDictionary!["SUPABASE_URL"]
+                as? String
+        else {
+            preconditionFailure("SUPABASE_URL cannot be nil")
+        }
+        return supabaseUrl
+    }()
+    
+    public static let SUPABASE_KEY: String = {
+        guard
+            let supabaseKey = Bundle.main.infoDictionary!["SUPABASE_KEY"]
+                as? String
+        else {
+            preconditionFailure("SUPABASE_KEY cannot be nil")
+        }
+        return supabaseKey
+    }()
+    
+    public static let API_ROOT_URL: String = {
+        guard
+            let apiRootURL =
+                Bundle.main.infoDictionary!["API_ROOT_URL"] as? String
+        else {
+            preconditionFailure("API_ROOT_URL cannot be nil")
+        }
+        return apiRootURL
+    }()
 }

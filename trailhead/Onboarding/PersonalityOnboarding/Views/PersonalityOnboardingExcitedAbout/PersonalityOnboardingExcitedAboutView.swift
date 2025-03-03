@@ -29,16 +29,16 @@ struct PersonalityOnboardingExcitedAboutView: View {
                             .padding(.bottom, -10)
                         VStack(alignment: .leading) {
                             Text(
-                                "My selection \(self.store.selectedExcitedAboutOptions.count)/\(self.store.maxSelectableExcitedAboutOptions)"
+                                "My selection \(self.store.selectedInterests.count)/\(self.store.maxSelectableInterests)"
                             )
                             .font(.title3)
                             .bold()
                             SelectionPlaceholdersView(
-                                selectedOptions: self.store
-                                    .selectedExcitedAboutOptions
+                                selectedInterests: self.store
+                                    .selectedInterests
                             ) {
-                                option in
-                                self.store.deselectOption(option)
+                                interest in
+                                self.store.deselectInterest(interest)
                             }
                             .padding(.bottom)
                         }
@@ -53,12 +53,12 @@ struct PersonalityOnboardingExcitedAboutView: View {
             ContinueButton(
                 label: "Confirm collection and continue to next step"
             ) { self.onContinue() }
-            .disabled(store.selectedExcitedAboutOptions.isEmpty)
+                .disabled(store.selectedInterests.isEmpty)
             .padding()
-            .offset(y: store.selectedExcitedAboutOptions.isEmpty ? 100 : 0)
+            .offset(y: store.selectedInterests.isEmpty ? 100 : 0)
             .animation(
                 .spring(duration: 0.5),
-                value: store.selectedExcitedAboutOptions.isEmpty)
+                value: store.selectedInterests.isEmpty)
         }
     }
 

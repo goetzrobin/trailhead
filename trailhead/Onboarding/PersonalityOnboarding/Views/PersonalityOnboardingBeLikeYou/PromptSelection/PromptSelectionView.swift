@@ -10,7 +10,7 @@ import SwiftUI
 struct PromptSelectionView: View {
     let recordedPromptResponses: [PromptOptionAndResponse?]
     @State private var showingAll = false
-    @State private var currentTab: String = PROMPT_CATEGORIES[0].id
+    @State private var currentTab: String = PROMPT_CATEGORIES[0].name
 
     let onSelectOption: (_ option: PromptOption) -> Void
     let onClose: () -> Void
@@ -26,7 +26,7 @@ struct PromptSelectionView: View {
     var body: some View {
         ZStack(alignment: .top) {
             TabView(selection: $currentTab) {
-                ForEach(PROMPT_CATEGORIES, id: \.id) { category in
+                ForEach(PROMPT_CATEGORIES, id: \.name) { category in
                     List(category.options) {
                         option in
                         PromptOptionListItemView(
@@ -89,7 +89,7 @@ struct PromptSelectionView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 // Back button
                 Button(action: { self.showingAll.toggle() }) {
-                    Text(self.showingAll ? "Search" : "View All")
+                    Text(self.showingAll ? "View Categories" : "View All")
                         .font(.system(size: 15))
                         .padding(.horizontal, 5)
                 }
@@ -149,6 +149,7 @@ struct PromptOptionListItemView: View {
                 nil, nil,
                 PromptOptionAndResponse(
                     option: PromptOption(
+                        id: UUID(),
                         prompt: "A skill I'm proud of developing is"),
                     response: "Cooking"),
             ],

@@ -123,10 +123,12 @@ enum MessageStreamState {
     }
     
     func startSession(with scores: SessionScores, onSuccess: ((_: SessionLog) -> Void)?) {
+        self.messageApiClient.fetchMessagesStatus = .loading
         self.sessionApiClient.startSession(with: slug, for: userId, scores: scores) {
             newSessionLog in
             print("new session log with id \(newSessionLog.id)")
             self.sessionLogId = newSessionLog.id
+            self.messageApiClient.fetchMessagesStatus = .success([])
             onSuccess?(newSessionLog)
         }
     }

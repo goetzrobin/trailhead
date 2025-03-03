@@ -9,12 +9,12 @@ import Foundation
 
 // MARK: - Check In List View
 struct CheckInListView: View {
-    let checkIns: [CheckIn]
+    let checkIns: [SessionLog]
     var body: some View {
         
         LazyVStack(spacing: 10) {
             ForEach(self.checkIns, id: \.self.id) { checkIn in
-                CheckInCard(date: checkIn.timestamp, primaryEmotion: checkIn.primaryEmotion, secondaryEmotion: checkIn.secondaryEmotion)
+                CheckInCard(date: checkIn.createdAt, primaryEmotion: Emotion.pleasantHighEnergy[0], secondaryEmotion: Emotion.pleasantHighEnergy[0])
             }
         }
         .padding(.bottom, 80)
@@ -32,7 +32,7 @@ struct CheckInListView: View {
 
 #Preview {
     ScrollView {
-        CheckInListView(checkIns: [CheckIn.example])
+        CheckInListView(checkIns: [])
 
 
         CheckInListView(checkIns: [])

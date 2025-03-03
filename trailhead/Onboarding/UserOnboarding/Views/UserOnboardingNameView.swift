@@ -42,5 +42,7 @@ struct UserOnboardingNameView: View {
 }
 
 #Preview {
-    UserOnboardingNameView(onBack: {}, onContinue: {}).environment(UserOnboardingStore())
+    NavigationStack {
+        UserOnboardingNameView(onBack: {}, onContinue: {}).environment(UserOnboardingStore())
+    }
 }

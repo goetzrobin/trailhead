@@ -49,8 +49,8 @@ struct IconBox: View {
 }
 
 struct SelectionPlaceholdersView: View {
-    let selectedOptions: [ExcitedAboutOption]
-    let onSelectionTap: (_ option: ExcitedAboutOption) -> Void
+    let selectedInterests: [UserInterest]
+    let onSelectionTap: (_ option: UserInterest) -> Void
     
     @State private var previousCount: Int = 0
     
@@ -63,32 +63,39 @@ struct SelectionPlaceholdersView: View {
         }
     }
     
+    var interestsView: some View {
+        ForEach(Array(selectedInterests), id: \.id) { interest in
+            InterestView(interest: interest) {
+                withAnimation {
+                    self.onSelectionTap(interest)
+                }
+            }
+            .id(interest.id)
+        }
+    }
+    
+    func placeHoldersView(boxWidth: CGFloat) -> some View {
+        ForEach(min(3, selectedInterests.count)..<3, id: \.self) { index in
+            IconBox(iconName: self.pickPlaceholderIcon(for: index))
+                .transition(.scale.combined(with: .opacity))
+                .frame(width: boxWidth)
+        }
+    }
+    
     var body: some View {
         GeometryReader { geometry in
             let boxWidth = geometry.size.width / 3
             ScrollViewReader { scrollProxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
-                        ForEach(Array(selectedOptions), id: \.id) { option in
-                            OptionView(option: option) {
-                                withAnimation {
-                                    self.onSelectionTap(option)
-                                }
-                            }
-                            .id(option.id)
-                        }
-                        
-                        ForEach(min(3, selectedOptions.count)..<3, id: \.self) { index in
-                            IconBox(iconName: self.pickPlaceholderIcon(for: index))
-                                .transition(.scale.combined(with: .opacity))
-                                .frame(width: boxWidth)
-                        }
+                        interestsView
+                        placeHoldersView(boxWidth: boxWidth)
                     }
                     .frame(height: 60)
                 }
                 // Add onChange modifier to detect when items are added
-                .onChange(of: selectedOptions.count) { oldValue, newValue in
-                    if let lastItem = selectedOptions.last {
+                .onChange(of: selectedInterests.count) { oldValue, newValue in
+                    if let lastItem = selectedInterests.last {
                         // Animate scroll to the last item
                         withAnimation {
                             scrollProxy.scrollTo(lastItem.id, anchor: newValue > oldValue ? .trailing : .leading)
@@ -101,8 +108,8 @@ struct SelectionPlaceholdersView: View {
     }
 }
 
-struct OptionView: View {
-    let option: ExcitedAboutOption
+struct InterestView: View {
+    let interest: UserInterest
     let onTap: () -> Void
     
     var fontSize = 13.0
@@ -110,7 +117,7 @@ struct OptionView: View {
     var verticalPadding = 12.0
 
     var body: some View {
-        Button(option.name) {
+        Button(interest.name) {
             self.onTap()
         }
         .font(.system(size: self.fontSize))
@@ -120,7 +127,7 @@ struct OptionView: View {
 }
 
 #Preview {
-    SelectionPlaceholdersView(selectedOptions: []) {option in 
+    SelectionPlaceholdersView(selectedInterests: []) {option in
         print("unselect here \(option.name)")
     }
 }

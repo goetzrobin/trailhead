@@ -80,7 +80,7 @@ struct PromptListView: View {
         promptAndResponses: [
             nil,
             PromptOptionAndResponse(
-                option: PromptOption(prompt: "What is your favorite memory?"),
+                option: PromptOption(id: UUID(), prompt: "What is your favorite memory?"),
                 response:
                     "how to ride bicycle kind of trend of why I'm not learning in my childhood what are you for skill"
             ), nil,

@@ -9,39 +9,22 @@ import Observation
 import SwiftUI
 
 @Observable class PersonalityOnboardingExcitedAboutStore {
-    let maxSelectableExcitedAboutOptions = 10
-    private(set) var selectedExcitedAboutOptions: [ExcitedAboutOption] = []
+    let maxSelectableInterests = 10
+    private(set) var selectedInterests: [UserInterest] = []
     
-    let maxSelectableMentorQualities = 3
-    private(set) var selectedMentorQualities: [MentorQuality] = []
-    
-    func selectOption(_ option: ExcitedAboutOption) {
-        if selectedExcitedAboutOptions.count >= self.maxSelectableExcitedAboutOptions {
+
+    func selectInterest(_ interest: UserInterest) {
+        if selectedInterests.count >= self.maxSelectableInterests {
             return
         }
-        if !selectedExcitedAboutOptions.contains(option) {
-            selectedExcitedAboutOptions.append(option)
+        if !selectedInterests.contains(interest) {
+            selectedInterests.append(interest)
         }
     }
     
-    func deselectOption(_ option: ExcitedAboutOption) {
-        if let index = selectedExcitedAboutOptions.firstIndex(of: option) {
-            selectedExcitedAboutOptions.remove(at: index)
-        }
-    }
-    
-    func selectQuality(_ quality: MentorQuality) {
-        if selectedMentorQualities.count >= self.maxSelectableMentorQualities {
-            return
-        }
-        if !selectedMentorQualities.contains(quality) {
-            selectedMentorQualities.append(quality)
-        }
-    }
-    
-    func deselectQuality(_ quality: MentorQuality) {
-        if let index = selectedMentorQualities.firstIndex(of: quality) {
-            selectedMentorQualities.remove(at: index)
+    func deselectInterest(_ interest: UserInterest) {
+        if let index = selectedInterests.firstIndex(of: interest) {
+            selectedInterests.remove(at: index)
         }
     }
 }

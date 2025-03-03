@@ -10,25 +10,25 @@ struct SelectionSectionsView: View {
     @Environment(PersonalityOnboardingExcitedAboutStore.self) private var store
 
     var body: some View {
-            ForEach(SECTIONS) { section in
+        ForEach(INTEREST_CATEGORIES) { category in
                 SelectionSectionView(
-                    title: section.id, iconName: section.iconName
+                    title: category.name, iconName: category.iconName
                 ) {
                     SeeMoreView {
                         WrappingCollectionView(
-                            data: section.options,
+                            data: category.interests,
                             spacing: 10,  // Spacing between items both horizontally and vertically
                             singleItemHeight: 40  // Height for each item
-                        ) { option in
+                        ) { interest in
                             Toggle(
-                                option.name,
+                                interest.name,
                                 isOn: Binding(
-                                    get: { self.store.selectedExcitedAboutOptions.contains(option) },
+                                    get: { self.store.selectedInterests.contains(interest) },
                                     set: { isOn in
                                         if isOn {
-                                            self.store.selectOption(option)
+                                            self.store.selectInterest(interest)
                                         } else {
-                                            self.store.deselectOption(option)
+                                            self.store.deselectInterest(interest)
                                         }
                                     }
                                 )

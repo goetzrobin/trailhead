@@ -11,7 +11,10 @@ struct OnboardingView: View {
     @Binding var showingAuth: Bool
 
     let auth: AuthStore
-    let onOnboardingComplete: () -> Void
+    let userApiClient: UserAPIClient
+    let onboardingLetterApiClient: OnboardingLetterAPIClient
+    let onboardingCompleteApiClient: CompleteOnboardingAPIClient
+    let onOnboardingComplete: (_: UUID?) -> Void
 
     @State var router = AppRouter()
     @State private var isUserConsentGiven = false
@@ -62,6 +65,8 @@ struct OnboardingView: View {
                 case .userOnboarding:
                     UserOnboardingFlowView(
                         router: self.router,
+                        userApiClient: self.userApiClient,
+                        userId: self.auth.userId,
                         onFlowComplete: {
                             self.router.path.append(
                                 OnboardingPath
@@ -73,6 +78,8 @@ struct OnboardingView: View {
                 case .personalityOnboarding:
                     PersonalityOnboardingFlowView(
                         router: self.router,
+                        userApiClient: self.userApiClient,
+                        userID: self.auth.userId,
                         onFlowComplete: {
                             self.router.path.append(
                                 OnboardingPath
@@ -83,17 +90,57 @@ struct OnboardingView: View {
                     .navigationBarBackButtonHidden()
 
                 case .oneMoreThing:
-                    OneMoreThingView {
-                        onOnboardingComplete()
+                    OneMoreThingView { text in
+                        if let userId = auth.userId {
+                            self.onboardingLetterApiClient
+                                .submitOnboardingLetter(for: userId, with: text)
+                            { _ in
+                                self.router.path.append(
+                                    OnboardingPath
+                                        .completingOnboarding
+                                )
+                            }
+                        }
                     }
+                    .navigationBarBackButtonHidden()
+
+                case .completingOnboarding:
+                    CompletingOnboardingView()
+                        .onAppear {
+                            completeOnboarding()
+                        }
+                        .navigationBarBackButtonHidden()
                 }
             }
         }
     }
+    func completeOnboarding() {
+        if let userId = self.auth.userId {
+            self.onboardingCompleteApiClient.completeOnboarding(for: userId, onSuccess:  { profile in
+                self.onOnboardingComplete(profile?.sessionLogId)
+                })
+        }
+    }
+}
+
+struct CompletingOnboardingView: View {
+    var body: some View {
+        Text("Completing onboarding")
+
+    }
 }
 
 #Preview {
-    OnboardingView(showingAuth: .constant(false), auth: AuthStore()) {
+    @Previewable var auth = AuthStore()
+    OnboardingView(
+        showingAuth: .constant(false),
+        auth: auth,
+        userApiClient: UserAPIClient(authProvider: auth),
+        onboardingLetterApiClient: OnboardingLetterAPIClient(
+            authProvider: auth),
+        onboardingCompleteApiClient: CompleteOnboardingAPIClient(
+            authProvider: auth)
+    ) { sessionLogId in
         print("onboarding completed")
     }
 }

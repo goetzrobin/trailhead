@@ -35,6 +35,7 @@ struct ConversationView: View {
     private var sessionLogStatus: SessionLog.Status?
     private var maxSteps: Int?
     private var delayInMs: Int
+    private var isShowingXButton: Bool = false
 
     private var isNewMessageEmpty: Bool {
         newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -55,7 +56,8 @@ struct ConversationView: View {
         sessionLogId: UUID?,
         delayInMs: Int? = 300,
         maxSteps: Int? = nil,
-        sessionLogStatus: SessionLog.Status? = .inProgress
+        sessionLogStatus: SessionLog.Status? = .inProgress,
+        isShowingXButton: Bool = false
     ) {
         let viewModel = ChatMessageStore(
             sessionApiClient: sessionApiClient,
@@ -68,6 +70,7 @@ struct ConversationView: View {
         self.sessionLogStatus = sessionLogStatus
         self.delayInMs = delayInMs ?? 300
         self.maxSteps = maxSteps
+        self.isShowingXButton = isShowingXButton
     }
 
     var body: some View {
@@ -77,6 +80,13 @@ struct ConversationView: View {
             }
 
             VStack(alignment: .leading) {
+                CloseHeader {
+                    if (self.isConversationEnded) {
+                        self.dismiss()
+                    } else {
+                        self.isShowingEndConvoModal = true
+                    }
+                }
                 ConversationMessageList(
                     viewModel: viewModel,
                     isInitialLoadComplete: $isInitialLoadComplete,
@@ -233,7 +243,6 @@ struct ConversationMessageList: View {
                             EmptyView()
                         }
                         else {
-                            Text("\(messageViewModel.message.scope)")
                             MessageBubbleView(viewModel: messageViewModel)
                                 .id(messageViewModel.id)
                                 .transition(.opacity)

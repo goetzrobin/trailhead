@@ -39,7 +39,7 @@ struct UserConsentView: View {
                         .padding(.bottom, 40)
                 }
                 VStack(alignment: .leading) {
-                    Text("By continuing you agree to our [Terms of Service](https://thejournai.com/terms-of-service) and [Privacy Policy.](https://thejournai.com/privacy-policy)")
+                    Text("By continuing you agree to our [Terms of Service](https://myjournai.vercel.app/terms) and [Privacy Policy.](https://myjournai.vercel.app/privacy-policy)")
                         .padding(.bottom, 80)
                     Button {
                         self.onTap()

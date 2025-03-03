@@ -4,11 +4,14 @@ import SwiftUI
 // MARK: - Main View
 struct CheckInView: View {
     @Environment(AppRouter.self) var router: AppRouter
+    @Environment(CheckInAPIClient.self) var checkInApiClient: CheckInAPIClient
     @State private var viewModel = CheckInAnimationViewModel()
     @State private var circleFromTop: CGFloat = 999.0
     @State private var isDoingCheckIn = false
     
-    @State private var checkIns: [CheckIn] = []
+    private var checkIns: [SessionLog] {
+        self.checkInApiClient.fetchCheckInLogsStatus.data ?? []
+    }
     
     private var shouldAnimate: Bool {
         self.checkIns.count > 2
@@ -97,4 +100,5 @@ struct CheckInView: View {
 #Preview {
     CheckInView()
         .environment(AppRouter())
+        .environment(CheckInAPIClient(authProvider: AuthStore()))
 }

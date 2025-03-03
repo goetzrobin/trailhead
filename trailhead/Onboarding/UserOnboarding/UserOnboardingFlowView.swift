@@ -8,8 +8,10 @@ import SwiftUI
 
 struct UserOnboardingFlowView: View {
     let router: AppRouter
+    let userApiClient: UserAPIClient
+    let userId: UUID?
     let onFlowComplete: () -> Void
-    
+
     @State var userOnboardingStore = UserOnboardingStore()
 
     var body: some View {
@@ -48,19 +50,85 @@ struct UserOnboardingFlowView: View {
                 UserOnboardingBirthdayView(
                     onBack: { self.router.path.removeLast() },
                     onSkip: {
-                        self.onFlowComplete()
+                        self.router.path.append(
+                            UserOnboardingPath
+                                .ethnicity)
                     },
                     onContinue: {
-                        self.onFlowComplete()
+                        self.router.path.append(
+                            UserOnboardingPath
+                                .ethnicity)
                     }
                 )
                 .environment(self.userOnboardingStore)
+            case .ethnicity:
+                UserOnboardingEthnicitySelectionView(
+                    onBack: { self.router.path.removeLast() },
+                    onContinue: {
+                        self.router.path.append(
+                            UserOnboardingPath
+                                .genderIdentity)
+                    }
+                )
+                .environment(self.userOnboardingStore)
+            case .genderIdentity:
+                UserOnboardingGenderIdentityView(
+                    onBack: { self.router.path.removeLast() },
+                    onContinue: {
+                        self.router.path.append(
+                            UserOnboardingPath
+                                .gradYear)
+                    }
+                )
+                .environment(self.userOnboardingStore)
+            case .gradYear:
+                UserOnboardingGraduationYearView(
+                    onBack: { self.router.path.removeLast() },
+                    onContinue: {
+                        self.router.path.append(
+                            UserOnboardingPath
+                                .cohort)
+                    }
+                )
+                .environment(self.userOnboardingStore)
+            case .cohort:
+                UserOnboardingCohortView(
+                    onBack: { self.router.path.removeLast() },
+                    onContinue: {
+                        self.router.path.append(
+                            UserOnboardingPath
+                                .competitionLevel)
+                    }
+                )
+                .environment(self.userOnboardingStore)
+            case .competitionLevel:
+                UserOnboardingCompetitionLevelView(
+                    onBack: { self.router.path.removeLast() },
+                    onContinue: {
+                        self.router.path.append(
+                            UserOnboardingPath
+                                .submittingInfo)
+                    }
+                )
+                .environment(self.userOnboardingStore)
+            case .submittingInfo:
+                UserOnboardingSubmittingInfoView(
+                    userApiClient: self.userApiClient,
+                    userId: self.userId,
+                    data: self.userOnboardingStore.data
+                ) {
+                    self.onFlowComplete()
+                    print("completed")
+                }.navigationBarBackButtonHidden()
             }
         }
     }
 }
 #Preview {
-    UserOnboardingFlowView(router: AppRouter()) {
-        print("Flow complete")
+    @Previewable @Bindable var router = AppRouter()
+    NavigationStack(path: $router.path) {
+        UserOnboardingFlowView(router: router, userApiClient: UserAPIClient(authProvider: AuthStore()), userId: UUID()) {
+            print("Flow complete")
+        }
     }
 }

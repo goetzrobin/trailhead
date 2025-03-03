@@ -4,9 +4,9 @@
 //
 //  Created by Robin Götz on 2/17/25.
 //
-
 import Foundation
 import Combine
+import Observation
 
 enum SessionAPIError: Error {
     case sessionsNotFound
@@ -133,6 +133,7 @@ enum SessionAPIError: Error {
 
         session.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else { return }
+            print("response \(response)")
 
             // Handle request failure
             if let error = error {

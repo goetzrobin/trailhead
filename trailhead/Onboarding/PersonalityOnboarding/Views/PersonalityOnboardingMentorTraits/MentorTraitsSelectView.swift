@@ -7,24 +7,28 @@
 
 import SwiftUI
 
-struct MentorQualitySelectView: View {
-    @Environment(PersonalityOnboardingMentorQualitiesStore.self) private var store
+struct MentorTraitsSelectView: View {
+    private let store: PersonalityOnboardingMentorTraitsStore
+    
+    init(store: PersonalityOnboardingMentorTraitsStore) {
+        self.store = store
+    }
 
     var body: some View {
         WrappingCollectionView(
-            data: ALL_MENTOR_QUALITIES,
+            data: ALL_MENTOR_TRAITS,
             spacing: 10,  // Spacing between items both horizontally and vertically
             singleItemHeight: 40  // Height for each item
-        ) { quality in
+        ) { trait in
             Toggle(
-                quality.name,
+                trait.name,
                 isOn: Binding(
-                    get: { self.store.selectedMentorQualities.contains(quality) },
+                    get: { self.store.selectedMentorTraits.contains(trait) },
                     set: { isOn in
                         if isOn {
-                            self.store.selectQuality(quality)
+                            self.store.selectTrait(trait)
                         } else {
-                            self.store.deselectQuality(quality)
+                            self.store.deselectTrait(trait)
                         }
                     }
                 )
@@ -35,5 +39,5 @@ struct MentorQualitySelectView: View {
 }
 
 #Preview {
-    MentorQualitySelectView().environment(PersonalityOnboardingMentorQualitiesStore())
+    MentorTraitsSelectView(store: PersonalityOnboardingMentorTraitsStore())
 }

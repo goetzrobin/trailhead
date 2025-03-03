@@ -24,15 +24,6 @@ struct SessionLog: Codable, Identifiable, Hashable {
     let createdAt: Date
     let updatedAt: Date?
 
-    enum CodingKeys: String, CodingKey {
-        case id, userId, sessionId, preFeelingScore, preMotivationScore,
-            preAnxietyScore
-        case postFeelingScore, postMotivationScore, postAnxietyScore, version,
-            summary, status
-        case startedAt, completedAt, createdAt
-        case updatedAt = "updated_at"
-    }
-
     enum Status: String, Codable {
         case inProgress = "IN_PROGRESS"
         case completed = "COMPLETED"

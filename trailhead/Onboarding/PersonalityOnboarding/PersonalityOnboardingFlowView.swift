@@ -9,12 +9,13 @@ import SwiftUI
 
 struct PersonalityOnboardingFlowView: View {
     let router: AppRouter
+    let userApiClient: UserAPIClient
+    let userID: UUID?
     let onFlowComplete: () -> Void
 
     @State var progressStore = PersonalityOnboardingProgressStore()
     @State var excitedAboutStore = PersonalityOnboardingExcitedAboutStore()
-    @State var mentorQualitiesStore =
-        PersonalityOnboardingMentorQualitiesStore()
+    @State var mentorTraitsStore = PersonalityOnboardingMentorTraitsStore()
     @State var beLikeYouStore =
         PersonalityOnboardingBeLikeYouStore()
 
@@ -61,6 +62,7 @@ struct PersonalityOnboardingFlowView: View {
 
             case .mentorQualities:
                 PersonalityOnboardingMentorQualitiesView(
+                    store: mentorTraitsStore,
                     currentStepProgress: self.progressStore.currentStepProgress,
                     onBack: {
                         self.progressStore.updateCurrentPath(
@@ -83,7 +85,6 @@ struct PersonalityOnboardingFlowView: View {
                     }
                 )
                 .environment(self.router)
-                .environment(self.mentorQualitiesStore)
             case .beLikeYou:
                 PersonalityOnboardingBeLikeYouView(
                     currentStepProgress: self.progressStore.currentStepProgress,
@@ -93,7 +94,12 @@ struct PersonalityOnboardingFlowView: View {
                         self.router.path.removeLast()
                     },
                     onContinue: {
-                        self.onFlowComplete()
+                        if let userId = self.userID {
+                            userApiClient.updatePersonality(for: userId, with: PersonalityDataRequest(promptResponses: beLikeYouStore.promptResponses.filter {$0 != nil}.map {prompt in return PersonalityDataRequest.PromptResponse(promptId: prompt!.option.id, content: prompt!.response)}, mentorTraits: mentorTraitsStore.selectedMentorTraits.map{ return $0.name }, interests: excitedAboutStore.selectedInterests.map { return $0.name} )) { _ in
+                                self.onFlowComplete()
+                            }
+                        }
+                                                            
                     }
                 )
                 .environment(self.router)
@@ -106,7 +112,7 @@ struct PersonalityOnboardingFlowView: View {
 #Preview {
     @Bindable var router = AppRouter()
     NavigationStack(path: $router.path) {
-        PersonalityOnboardingFlowView(router: router) {
+        PersonalityOnboardingFlowView(router: router, userApiClient: UserAPIClient(authProvider: AuthStore()), userID: UUID()) {
             print("Completed flow")
         }
     }

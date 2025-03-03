@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PersonalityOnboardingMentorQualitiesView: View {
-    @Environment(PersonalityOnboardingMentorQualitiesStore.self) private var store
+    let store: PersonalityOnboardingMentorTraitsStore
     let currentStepProgress: CGFloat
     let onBack: () -> Void
     let onSkip: () -> Void
@@ -34,19 +34,19 @@ struct PersonalityOnboardingMentorQualitiesView: View {
                             .font(.title2)
                             .bold()
                             .padding(.bottom, 10)
-                        MentorQualitySelectView()
+                        MentorTraitsSelectView(store: store)
                     }
                 }
                 HStack(alignment: .center) {
                     Text(
-                        "\(self.store.selectedMentorQualities.count)/\(self.store.maxSelectableMentorQualities) selected"
+                        "\(self.store.selectedMentorTraits.count)/\(self.store.maxSelectableMentorTraits) selected"
                     )
                     Spacer()
                     ContinueButton(
                         label: "Confirm collection and continue to next step"
                     ) {
                         self.onContinue()
-                    }.disabled(self.store.selectedMentorQualities.isEmpty)
+                    }.disabled(self.store.selectedMentorTraits.isEmpty)
                 }
             }
         }
@@ -55,8 +55,9 @@ struct PersonalityOnboardingMentorQualitiesView: View {
 
 #Preview {
     PersonalityOnboardingMentorQualitiesView(
+        store: PersonalityOnboardingMentorTraitsStore(),
         currentStepProgress: 0.5,
         onBack: { print("back") }, onSkip: { print("skip") },
         onContinue: { print("continue") }
-    ).environment(PersonalityOnboardingMentorQualitiesStore())
+    )
 }

@@ -4,8 +4,10 @@
 //
 //  Created by Robin Götz on 1/22/25.
 //
+import Foundation
+
 struct PromptOption: Identifiable, Equatable {
-    var id: String { prompt }
+    var id: UUID
     let prompt: String
 
     static func == (lhs: PromptOption, rhs: PromptOption) -> Bool {

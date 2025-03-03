@@ -34,11 +34,11 @@ struct SignUpSuccessView: View {
                 .edgesIgnoringSafeArea(.all)
                 .ignoresSafeArea()
             VStack(alignment: .center, spacing: 20) {
-                Text("Your code looks good!")
+                Text("Welcome to journai!")
                     .multilineTextAlignment(.center)
                     .font(.system(size: 50, weight: .bold, design: .default))
                     .signUpSuccessDelayedAppearance(delay: 0.7)
-                Text("The code is correct!")
+                Text("We can't wait to get started!")
                     .multilineTextAlignment(.center)
                     .bold()
                     .signUpSuccessDelayedAppearance(delay: 1.4)

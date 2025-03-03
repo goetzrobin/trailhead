@@ -14,6 +14,8 @@ enum CheckInStatus {
 }
 
 struct CheckInFlowView: View {
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.colorScheme) var colorScheme: ColorScheme
     @Environment(AppRouter.self) var router: AppRouter
     @Environment(AuthStore.self) var authStore: AuthStore
     @Environment(SessionAPIClient.self) var sessionApiClient: SessionAPIClient
@@ -22,9 +24,11 @@ struct CheckInFlowView: View {
     var body: some View {
         ZStack {
             VStack {
-                CloseHeader()
                 if status == .pickingTopic {
-                    ScrollView(.vertical) {
+                    CloseHeader {
+                        self.dismiss()
+                    }
+                    ScrollView(.vertical, showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Let's just check in")
                                 .font(.title)
@@ -33,9 +37,10 @@ struct CheckInFlowView: View {
                                 .padding(.bottom, 20)
                             Button(
                                 action: {
-                                    withAnimation {
-                                        self.status = .inConversation
-                                    }
+                                      withAnimation {
+                                            self.status = .inConversation
+                                        }
+                                   
                                 },
                                 label: {
                                     Text("Begin")
@@ -61,14 +66,15 @@ struct CheckInFlowView: View {
 
                     }
                 }
-                if status == .inConversation {
+                if status == .inConversation, let userId = authStore.userId {
                     ConversationView(
                         sessionApiClient: sessionApiClient,
                         authProvider: authStore,
-                        slug: "test-v0",
-                        userId: UUID(),
-                        sessionLogId: UUID(),
-                        maxSteps: 0
+                        slug: "unguided-open-v0",
+                        userId: userId,
+                        sessionLogId: nil,
+                        maxSteps: 3,
+                        isShowingXButton: true
                     )
                 }
                 Spacer()
@@ -77,31 +83,16 @@ struct CheckInFlowView: View {
             .safeAreaPadding(.top, 40)
         }
         .frame(maxHeight: .infinity)
-        .background(BackgroundBlurView())
+        .background(BackgroundBlurView(colorScheme: colorScheme))
         .edgesIgnoringSafeArea(.all)
     }
 }
 
-struct CloseHeader: View {
-    @Environment(\.dismiss) var dismiss
-
-    var body: some View {
-        HStack {
-            Spacer()
-            Button {
-                self.dismiss()
-            } label: {
-                Label("Close", systemImage: "xmark")
-                    .labelStyle(.iconOnly)
-                    .padding()
-            }
-        }
-    }
-}
 
 struct BackgroundBlurView: UIViewRepresentable {
+    let colorScheme: ColorScheme
     func makeUIView(context: Context) -> UIView {
-        let view = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
+        let view = UIVisualEffectView(effect: UIBlurEffect(style: self.colorScheme == .dark ? .dark : .light))
         DispatchQueue.main.async {
             view.superview?.superview?.backgroundColor = .clear
         }

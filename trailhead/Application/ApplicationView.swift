@@ -53,7 +53,6 @@ struct ApplicationView: View {
 
         TabView(selection: $selectedTab) {
             Group {
-
                 NavigationStack(path: self.$checkInRouter.path) {
                     CheckInView()
                 }

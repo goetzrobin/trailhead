@@ -13,9 +13,12 @@ struct ProfileView: View {
                     destination: PersonalInfoView(
                         user: userClient.fetchUserStatus.data,
                         onSave: { data, showAlert in
-                            Task {
-                                await self.userClient.updateUser(
-                                    with: data, onSuccess: showAlert)
+                            if let userId = auth.userId {
+                                self.userClient.updateUser(
+                                    for: userId, with: data,
+                                    onSuccess: { _ in
+                                        showAlert?()
+                                    })
                             }
                         })
                 ) {
@@ -125,9 +128,11 @@ struct ProfileView: View {
 }
 
 #Preview {
+    @Previewable var auth = AuthStore()
     NavigationStack {
         ProfileView()
             .environment(AppRouter())
-            .environment(UserAPIClient(authProvider: AuthStore()))
+            .environment(UserAPIClient(authProvider: auth))
+            .environment(auth)
     }
 }
