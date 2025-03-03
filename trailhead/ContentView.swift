@@ -67,7 +67,12 @@ struct ContentView: View {
                     }
             }
         } else if inInitialConversation, let userId = authStore.userId, let initialConversationSessionLogId = initialConversationSessionLogId {
-            ConversationView(sessionApiClient: sessionAPIClient, authProvider: authStore, slug: "onboarding-v0", userId: userId, sessionLogId: initialConversationSessionLogId )
+            ConversationView(sessionApiClient: sessionAPIClient, authProvider: authStore, slug: "onboarding-v0", userId: userId, sessionLogId: initialConversationSessionLogId, maxSteps: 5, customEndConversationLabel: "Complete onboarding!", onSessionEnded: {
+                Task {
+                    await self.authStore.fetchUser()
+                    inInitialConversation = false
+                }
+            } )
         } else {
             OnboardingView(showingAuth: $showingAuth, auth: authStore, userApiClient: userAPIClient, onboardingLetterApiClient: onboardingLetterAPIClient, onboardingCompleteApiClient: onboardingCompleteApiClient) { sessionLogId in
                 initialConversationSessionLogId = sessionLogId

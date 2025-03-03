@@ -36,6 +36,8 @@ struct ConversationView: View {
     private var maxSteps: Int?
     private var delayInMs: Int
     private var isShowingXButton: Bool = false
+    private var customEndConversationLabel: String?
+    private var onSessionEnded: (() -> Void)?
 
     private var isNewMessageEmpty: Bool {
         newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -57,7 +59,9 @@ struct ConversationView: View {
         delayInMs: Int? = 300,
         maxSteps: Int? = nil,
         sessionLogStatus: SessionLog.Status? = .inProgress,
-        isShowingXButton: Bool = false
+        isShowingXButton: Bool = false,
+        customEndConversationLabel: String? = nil,
+        onSessionEnded: (() -> Void)? = nil
     ) {
         let viewModel = ChatMessageStore(
             sessionApiClient: sessionApiClient,
@@ -71,6 +75,8 @@ struct ConversationView: View {
         self.delayInMs = delayInMs ?? 300
         self.maxSteps = maxSteps
         self.isShowingXButton = isShowingXButton
+        self.customEndConversationLabel = customEndConversationLabel
+        self.onSessionEnded = onSessionEnded
     }
 
     var body: some View {
@@ -176,13 +182,14 @@ struct ConversationView: View {
                 SessionQuestionnaire(
                     completeDescription:
                         "Thanks for answering all of Sam's questions!",
-                    completeButtonText: "End Conversation"
+                    completeButtonText: customEndConversationLabel ?? "End Conversation"
                 ) { scores in
                     // hit endpoint
                     self.viewModel.endSession(with: scores) { _ in
                         self.viewModel.refreshSessionsAndLogs()
                         isShowingEndConvoModal = false
                         isConversationEnded = true
+                        onSessionEnded?()
                     }
                 }
                 .presentationDetents([.height(270)])
