@@ -69,7 +69,7 @@ struct WelcomeView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.jWhite)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 10)
                     Button {
                         self.onSignInTap?()
                     } label: {
@@ -79,7 +79,7 @@ struct WelcomeView: View {
                             .foregroundStyle(.white)
                     }
                     .buttonStyle(.plain)
-                    .padding(.bottom)
+                    .padding(.bottom, 40)
                 }
             }.padding(.horizontal)
         }

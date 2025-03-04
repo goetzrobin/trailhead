@@ -67,7 +67,7 @@ struct UserOnboardingGenderIdentityView: View {
                                     .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
                                     .multilineTextAlignment(.leading)
                             }
-                            .toggleStyle(JournaiToggleStyle(fontSize: 18, horizontalPadding: 18, verticalPadding: 8))
+                            .onboardingToggleStyle()
                             
                             // Show text field immediately after the custom option when selected
                             if option.type == "custom" && selectedOption == option {

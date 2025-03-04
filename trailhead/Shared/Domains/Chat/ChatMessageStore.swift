@@ -133,6 +133,9 @@ enum MessageStreamState {
         }
     }
     
+    var endSessionStatus: ResponseStatus<SessionLog> {
+        self.sessionApiClient.endSessionStatus
+    }
     func endSession(with scores: SessionScores, onSuccess: ((_: SessionLog) -> Void)?) {
         guard let sessionLogId = self.sessionLogId else {
             print("no session log id, cant end session")

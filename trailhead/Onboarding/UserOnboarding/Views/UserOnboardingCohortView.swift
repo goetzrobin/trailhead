@@ -53,7 +53,7 @@ struct UserOnboardingCohortView: View {
                     )) {
                         Text(option.label).frame(maxWidth: .infinity, minHeight: 50, alignment: .leading).multilineTextAlignment(.leading)
                     }
-                    .toggleStyle(JournaiToggleStyle(fontSize: 18, horizontalPadding: 18, verticalPadding: 8))
+                    .onboardingToggleStyle()
                 }
                 
                 if selectedOption?.type == "custom" {

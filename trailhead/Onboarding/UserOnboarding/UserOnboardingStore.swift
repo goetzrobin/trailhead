@@ -36,32 +36,32 @@ let COHORT_OPTIONS: [OnboardingOption] = [
 ]
 
 let ETHNICITY_OPTIONS: [OnboardingOption] =
-    [
-        OnboardingOption(
-            type: "fixed", value: "american-indian-or-alaska-native",
-            label: "American Indian or Alaska Native"),
-        OnboardingOption(type: "fixed", value: "asian", label: "Asian"),
-        OnboardingOption(
-            type: "fixed", value: "black-or-african-american",
-            label: "Black or African American"),
-        OnboardingOption(
-            type: "fixed", value: "hispanic/latino/latina",
-            label: "Hispanic/Latino/Latina"),
-        OnboardingOption(
-            type: "fixed", value: "white/caucasian", label: "White/Caucasian"),
-        OnboardingOption(
-            type: "fixed", value: "native-hawaiian-or-other-pacific-islander",
-            label: "Native Hawaiian or other Pacific Islander"),
-        OnboardingOption(
-            type: "custom", value: "biracial-or-multiracial",
-            label: "Biracial or Multiracial"),
-        OnboardingOption(
-            type: "custom", value: "prefer-to-self-describe",
-            label: "Prefer to self describe"),
-        OnboardingOption(
-            type: "fixed", value: "prefer-not-to-say",
-            label: "Prefer not to say"),
-    ]
+[
+    OnboardingOption(
+        type: "fixed", value: "american-indian-or-alaska-native",
+        label: "American Indian or Alaska Native"),
+    OnboardingOption(type: "fixed", value: "asian", label: "Asian"),
+    OnboardingOption(
+        type: "fixed", value: "black-or-african-american",
+        label: "Black or African American"),
+    OnboardingOption(
+        type: "fixed", value: "hispanic/latino/latina",
+        label: "Hispanic/Latino/Latina"),
+    OnboardingOption(
+        type: "fixed", value: "white/caucasian", label: "White/Caucasian"),
+    OnboardingOption(
+        type: "fixed", value: "native-hawaiian-or-other-pacific-islander",
+        label: "Native Hawaiian or other Pacific Islander"),
+    OnboardingOption(
+        type: "custom", value: "biracial-or-multiracial",
+        label: "Biracial or Multiracial"),
+    OnboardingOption(
+        type: "custom", value: "prefer-to-self-describe",
+        label: "Prefer to self describe"),
+    OnboardingOption(
+        type: "fixed", value: "prefer-not-to-say",
+        label: "Prefer not to say"),
+]
 
 let GENDER_OPTIONS: [OnboardingOption] = [
     OnboardingOption(type: "fixed", value: "woman", label: "Woman"),
@@ -97,8 +97,20 @@ let DIVISION_OPTIONS: [OnboardingOption] = [
 @Observable class UserOnboardingStore {
     var name: String = ""
     var pronouns: String = ""
-    var birthday: Date = Calendar.current.date(
-        from: DateComponents(year: 2000, month: 1, day: 1))!
+    var birthday: Date = {
+        let today = Date()
+        let calendar = Calendar.current
+        let currentMonth = calendar.component(.month, from: today)
+        let currentDay = calendar.component(.day, from: today)
+    
+        return calendar.date(
+            from: DateComponents(
+                year: 2000,
+                month: currentMonth,
+                day: currentDay
+            )
+        )!
+    }()
     var currentAge: Int {
         Calendar.current.dateComponents([.year], from: birthday, to: Date())
             .year ?? 0

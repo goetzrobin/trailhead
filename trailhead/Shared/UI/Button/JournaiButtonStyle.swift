@@ -23,14 +23,14 @@ struct JournaiButtonStyle: ButtonStyle {
 
     init(
         variant: JournaiButtonStyleVariant = .primary,
-        horizontalPadding: CGFloat = 20, verticalPadding: CGFloat = 20
+        horizontalPadding: CGFloat = 14, verticalPadding: CGFloat = 14
     ) {
         self.variant = variant
         self.horizontalPadding = horizontalPadding
         self.verticalPadding = verticalPadding
     }
 
-    init(variant: JournaiButtonStyleVariant = .primary, padding: CGFloat = 20) {
+    init(variant: JournaiButtonStyleVariant = .primary, padding: CGFloat = 14) {
         self.variant = variant
         self.horizontalPadding = padding
         self.verticalPadding = padding
@@ -53,12 +53,12 @@ struct JournaiButtonStyle: ButtonStyle {
 
     private var foregroundStyle: some ShapeStyle {
         switch variant {
-        case .primary, .accent:
+        case .primary:
             return AnyShapeStyle(
                 colorScheme == .light ? Color.white : Color.black)
         case .secondary:
             return AnyShapeStyle(.foreground)
-        case .white:
+        case .accent, .white:
             return AnyShapeStyle(Color.black)
         }
     }
@@ -80,47 +80,47 @@ struct JournaiButtonStyle: ButtonStyle {
 // MARK: - Style Extension
 extension ButtonStyle where Self == JournaiButtonStyle {
     static var jPrimary: JournaiButtonStyle { JournaiButtonStyle() }
-    static func jPrimary(padding: CGFloat = 20) -> JournaiButtonStyle {
+    static func jPrimary(padding: CGFloat = 14) -> JournaiButtonStyle {
         JournaiButtonStyle(variant: .primary, padding: padding)
     }
-    static func jPrimary(horizontalPadding: CGFloat = 20, verticalPadding: CGFloat = 20) -> JournaiButtonStyle {
+    static func jPrimary(horizontalPadding: CGFloat = 14, verticalPadding: CGFloat = 14) -> JournaiButtonStyle {
         JournaiButtonStyle(variant: .primary, horizontalPadding: horizontalPadding, verticalPadding: verticalPadding)
     }
     
     static var jSecondary: JournaiButtonStyle {
         JournaiButtonStyle(variant: .secondary)
     }
-    static func jSecondary(padding: CGFloat = 20) -> JournaiButtonStyle {
+    static func jSecondary(padding: CGFloat = 14) -> JournaiButtonStyle {
         JournaiButtonStyle(variant: .secondary, padding: padding)
     }
-    static func jSecondary(horizontalPadding: CGFloat = 20, verticalPadding: CGFloat = 20) -> JournaiButtonStyle {
+    static func jSecondary(horizontalPadding: CGFloat = 14, verticalPadding: CGFloat = 14) -> JournaiButtonStyle {
         JournaiButtonStyle(variant: .secondary, horizontalPadding: horizontalPadding, verticalPadding: verticalPadding)
     }
     
     static var jAccent: JournaiButtonStyle {
         JournaiButtonStyle(variant: .accent)
     }
-    static func jAccent(padding: CGFloat = 20) -> JournaiButtonStyle {
+    static func jAccent(padding: CGFloat = 14) -> JournaiButtonStyle {
         JournaiButtonStyle(variant: .accent, padding: padding)
     }
-    static func jAccent(horizontalPadding: CGFloat = 20, verticalPadding: CGFloat = 20) -> JournaiButtonStyle {
+    static func jAccent(horizontalPadding: CGFloat = 14, verticalPadding: CGFloat = 14) -> JournaiButtonStyle {
         JournaiButtonStyle(variant: .accent, horizontalPadding: horizontalPadding, verticalPadding: verticalPadding)
     }
     
     static var jWhite: JournaiButtonStyle {
         JournaiButtonStyle(variant: .white)
     }
-    static func jWhite(padding: CGFloat = 20) -> JournaiButtonStyle {
+    static func jWhite(padding: CGFloat = 14) -> JournaiButtonStyle {
         JournaiButtonStyle(variant: .white, padding: padding)
     }
-    static func jWhite(horizontalPadding: CGFloat = 20, verticalPadding: CGFloat = 20) -> JournaiButtonStyle {
+    static func jWhite(horizontalPadding: CGFloat = 14, verticalPadding: CGFloat = 14) -> JournaiButtonStyle {
         JournaiButtonStyle(variant: .white, horizontalPadding: horizontalPadding, verticalPadding: verticalPadding)
     }
 }
 
 struct JournaiButtonStyleExamplesView: View {
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 14) {
             Button(action: { print("Yo") }) {
                 Text("Continue")
                     .frame(maxWidth: .infinity)

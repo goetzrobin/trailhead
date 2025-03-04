@@ -22,7 +22,6 @@ struct UserOnboardingEthnicitySelectionView: View {
             return true
         }
 
-        // If a custom option that requires description is selected, ensure it's not empty
         if selectedOption?.type == "custom" && customValue.isEmpty {
             return true
         }
@@ -63,10 +62,8 @@ struct UserOnboardingEthnicitySelectionView: View {
                                     )
                                     .multilineTextAlignment(.leading)
                             }
-                            .toggleStyle(
-                                JournaiToggleStyle(
-                                    fontSize: 18, horizontalPadding: 18,
-                                    verticalPadding: 8))
+                            .onboardingToggleStyle()
+
 
                             // Show text field immediately after the custom option when selected
                             if option.type == "custom"

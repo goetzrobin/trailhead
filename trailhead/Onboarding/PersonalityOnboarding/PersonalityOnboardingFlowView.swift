@@ -88,6 +88,7 @@ struct PersonalityOnboardingFlowView: View {
             case .beLikeYou:
                 PersonalityOnboardingBeLikeYouView(
                     currentStepProgress: self.progressStore.currentStepProgress,
+                    isLoading: self.userApiClient.updatePersonalityStatus == .loading,
                     onBack: {
                         self.progressStore.updateCurrentPath(
                             .mentorQualities)

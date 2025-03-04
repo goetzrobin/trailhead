@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContinueButton: View {
+    @Environment(\.colorScheme) var colorScheme: ColorScheme
     let label: String
     var isLoading = false
     let onTab: () -> Void
@@ -19,11 +20,11 @@ struct ContinueButton: View {
             if self.isLoading {
                 ProgressView()
                     .frame(width: 24, height: 24)
-                    .tint(.black)
+                    .tint(self.colorScheme == .light ? .white : .black)
             } else {
                 Label(self.label, systemImage: "chevron.right")
                     .buttonIconLabelStyle()
-                    .padding(.horizontal, 4)
+                    .frame(width: 24, height: 24)
             }
         }
         .buttonStyle(.jPrimary)
@@ -31,7 +32,11 @@ struct ContinueButton: View {
 }
 
 #Preview {
+    @Previewable @State var isLoading: Bool = false
     ContinueButton(label: "Do something") {
         print("Do something cool")
+    }
+    ContinueButton(label: "Do something", isLoading: isLoading) {
+        isLoading.toggle()
     }
 }

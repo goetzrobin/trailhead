@@ -182,9 +182,9 @@ struct ConversationView: View {
                 SessionQuestionnaire(
                     completeDescription:
                         "Thanks for answering all of Sam's questions!",
-                    completeButtonText: customEndConversationLabel ?? "End Conversation"
+                    completeButtonText: customEndConversationLabel ?? "End Conversation",
+                    isLoading: self.viewModel.endSessionStatus == .loading
                 ) { scores in
-                    // hit endpoint
                     self.viewModel.endSession(with: scores) { _ in
                         self.viewModel.refreshSessionsAndLogs()
                         isShowingEndConvoModal = false

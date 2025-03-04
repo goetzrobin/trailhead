@@ -16,4 +16,5 @@ enum OnboardingPath: Hashable {
     case personalityOnboarding
     case oneMoreThing
     case completingOnboarding
+    case notifications
 }

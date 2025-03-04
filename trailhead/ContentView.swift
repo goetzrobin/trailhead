@@ -35,13 +35,12 @@ struct ContentView: View {
         self.onboardingStore = OnboardingStore()
         self.showingAuth = false
     }
+    
 
-    var debug = true
+//    var debug = true
     var body: some View {
 //        if debug {
-//            OneMoreThingView { text in
-//                print("Start journey \(text)")
-//            }
+//            NotificationsView()
 //        } else
         if authStore.isAuthenticated && authStore.isOnboardingCompleted {
             VStack {
@@ -72,13 +71,15 @@ struct ContentView: View {
                     await self.authStore.fetchUser()
                     inInitialConversation = false
                 }
-            } )
+            } ).tint(.jAccent)
         } else {
             OnboardingView(showingAuth: $showingAuth, auth: authStore, userApiClient: userAPIClient, onboardingLetterApiClient: onboardingLetterAPIClient, onboardingCompleteApiClient: onboardingCompleteApiClient) { sessionLogId in
                 initialConversationSessionLogId = sessionLogId
                 inInitialConversation = true
                 onboardingStore.completeOnboarding()
-            } .sheet(isPresented: $showingAuth) {
+            }
+            .tint(.jAccent)
+            .sheet(isPresented: $showingAuth) {
                 AuthContainerView(authStore: authStore)
             }
         }

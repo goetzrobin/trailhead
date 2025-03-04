@@ -12,6 +12,7 @@ struct PersonalityOnboardingBeLikeYouView: View {
     @Environment(PersonalityOnboardingBeLikeYouStore.self) private var store
 
     let currentStepProgress: CGFloat
+    let isLoading: Bool
     let onBack: () -> Void
     let onContinue: () -> Void
 
@@ -47,11 +48,12 @@ struct PersonalityOnboardingBeLikeYouView: View {
                     )
                     Spacer()
                     ContinueButton(
-                        label: "Confirm collection and continue to next"
+                        label: "Confirm collection and continue to next",
+                        isLoading: isLoading
                     ) {
                         self.onContinue()
                     }
-                    .disabled(store.respondedToResponsesCount == 0)
+                    .disabled(store.respondedToResponsesCount == 0 || isLoading)
                 }
             }
             .navigationDestination(for: BeLikeYouPath.self) { path in
@@ -99,6 +101,7 @@ struct PersonalityOnboardingBeLikeYouView: View {
     NavigationStack(path: $appRouter.path) {
         PersonalityOnboardingBeLikeYouView(
             currentStepProgress: 0.5,
+            isLoading: false,
             onBack: { print("back") },
             onContinue: { print("continue") }
         )

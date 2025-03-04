@@ -41,6 +41,8 @@ import SwiftUICore
                         parseOnboardingCompletedFromUserMeta(
                             user: state.session?.user)
                     isAuthenticated = state.session != nil
+                } else {
+                    isAuthenticated = false
                 }
             }
         }

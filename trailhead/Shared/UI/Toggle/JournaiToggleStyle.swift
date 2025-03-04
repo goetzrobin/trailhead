@@ -30,7 +30,7 @@ struct JournaiToggleStyle: ToggleStyle {
 }
 
 #Preview {
-    @Previewable @State var isOn = false
+    @Previewable @State var isOn = true
     Toggle("Football", isOn: $isOn)
         .toggleStyle(JournaiToggleStyle())
 }

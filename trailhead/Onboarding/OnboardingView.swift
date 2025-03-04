@@ -83,14 +83,23 @@ struct OnboardingView: View {
                         onFlowComplete: {
                             self.router.path.append(
                                 OnboardingPath
-                                    .oneMoreThing
+                                    .notifications
                             )
                         }
                     )
                     .navigationBarBackButtonHidden()
+                    
+                case .notifications:
+                    NotificationsView {
+                        self.router.path.append(
+                            OnboardingPath
+                                .oneMoreThing
+                        )
+                    }
+                        .navigationBarBackButtonHidden()
 
                 case .oneMoreThing:
-                    OneMoreThingView { text in
+                    OneMoreThingView(isSubmittingOnboardingLetter: self.onboardingLetterApiClient.submitOnboardingLetterStatus == .loading){ text in
                         if let userId = auth.userId {
                             self.onboardingLetterApiClient
                                 .submitOnboardingLetter(for: userId, with: text)

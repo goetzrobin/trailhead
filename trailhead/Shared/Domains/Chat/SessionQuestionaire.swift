@@ -215,22 +215,32 @@ struct MotivationQuestionView: View {
 struct SummaryView: View {
     let completeDescription: String
     let completeButtonText: String
+    let isLoading: Bool
     let onComplete: () -> Void
+    
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Thanks for sharing!")
-                .font(.title2)
-                .bold()
+     
+                Text("Thanks for sharing!")
+                    .font(.title2)
+                    .bold()
 
             Text(completeDescription)
                 .foregroundColor(.secondary)
 
-            Button(action: onComplete) {
-                Text(completeButtonText)
-                    .frame(maxWidth: .infinity)
+            Button(action: self.onComplete) {
+                if isLoading {
+                    ProgressView()
+                        .tint(.black)
+                        .frame(maxWidth: .infinity, minHeight: 25)
+                } else {
+                    Text(completeButtonText)
+                        .frame(maxWidth: .infinity, minHeight: 25)
+                }
 
             }.buttonStyle(.jAccent)
+                .disabled(isLoading)
         }
         .padding()
     }
@@ -243,14 +253,17 @@ struct SessionQuestionnaire: View {
 
     let completeDescription: String
     let completeButtonText: String
+    let isLoading: Bool
     let onSessionStart: (_ scores: SessionScores) async -> Void
 
     init(
         completeDescription: String, completeButtonText: String,
+        isLoading: Bool = false,
         onSessionStart: @escaping (_ scores: SessionScores) async -> Void
     ) {
         self.completeDescription = completeDescription
         self.completeButtonText = completeButtonText
+        self.isLoading = isLoading
         self.onSessionStart = onSessionStart
         self.viewModel = PreSessionViewModel(onSessionStart: onSessionStart)
     }
@@ -282,6 +295,7 @@ struct SessionQuestionnaire: View {
                 SummaryView(
                     completeDescription: self.completeDescription,
                     completeButtonText: self.completeButtonText,
+                    isLoading: self.isLoading,
                     onComplete: {
                         Task {
                             await viewModel.startSession()
@@ -294,6 +308,7 @@ struct SessionQuestionnaire: View {
             }
             .tabViewStyle(.page)
             .indexViewStyle(.page(backgroundDisplayMode: .always))
+            .tint(.jAccent)
         }
     }
 }
@@ -302,7 +317,15 @@ struct SessionQuestionnaire: View {
 #Preview {
     SessionQuestionnaire(
         completeDescription: "Let's get this party started",
-        completeButtonText: "Start Session"
+        completeButtonText: "Start Session",
+        isLoading: true
+    ) { scores in
+        print("staring \(scores)")
+    }
+    SessionQuestionnaire(
+        completeDescription: "Let's get this party started",
+        completeButtonText: "Start Session",
+        isLoading: false
     ) { scores in
         print("staring \(scores)")
     }
