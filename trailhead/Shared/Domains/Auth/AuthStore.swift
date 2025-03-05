@@ -34,15 +34,13 @@ import SwiftUICore
     private func subscribeToAuthChanges() {
         Task {
             for await state in supabase.auth.authStateChanges {
-                if [.initialSession, .signedIn, .signedOut].contains(
+                if [.initialSession, .signedIn, .signedOut, .tokenRefreshed].contains(
                     state.event)
                 {
                     isOnboardingCompleted =
                         parseOnboardingCompletedFromUserMeta(
                             user: state.session?.user)
-                    isAuthenticated = state.session != nil
-                } else {
-                    isAuthenticated = false
+                    isAuthenticated = state.event == .signedOut || state.session != nil
                 }
             }
         }
@@ -54,10 +52,12 @@ import SwiftUICore
         do {
             let data = try await supabase.auth.signIn(
                 email: email, password: password)
-            isOnboardingCompleted = parseOnboardingCompletedFromUserMeta(
-                user: data.user)
-            print("Success")
-            signInStatus = .success(())
+            DispatchQueue.main.async {
+                self.isOnboardingCompleted = self.parseOnboardingCompletedFromUserMeta(
+                    user: data.user)
+                print("Success")
+                self.signInStatus = .success(())
+            }
         } catch {
             print("Error")
             signInStatus = .error(error)
@@ -109,7 +109,7 @@ import SwiftUICore
     }
 
     var fetchUserStatus: ResponseStatus<Supabase.User> = .idle
-    func fetchUser() async {
+    func fetchUser(onSuccess: (() -> Void)? = nil) async {
         fetchUserStatus = .loading
         do {
             let user = try await supabase.auth.user()
@@ -117,6 +117,7 @@ import SwiftUICore
                 user: user)
             isAuthenticated = user.isAnonymous == false
             fetchUserStatus = .success(user)
+            onSuccess?()
         } catch {
             print("error happened")
             fetchUserStatus = .error(error)

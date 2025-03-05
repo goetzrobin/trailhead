@@ -43,53 +43,57 @@ struct ContentView: View {
 
     var debug = true
     var body: some View {
-        if authStore.isAuthenticated && authStore.isOnboardingCompleted {
-            VStack {
-                ApplicationView()
-                    .navigationBarBackButtonHidden()
-                    .environment(self.authStore)
-                    .environment(self.userAPIClient)
-                    .environment(self.sessionAPIClient)
-                    .environment(self.checkInAPIClient)
-                    .refreshSessionOnAppear(self.authStore)
-                    .onAppear {
-                        if let userId = authStore.userId {
-                            self.userAPIClient.fetchUser(by: userId)
-                            self.sessionAPIClient
-                                .fetchSessionsWithLogs(for: userId)
-                            self.checkInAPIClient.fetchCheckInLogs(for: userId)
+        VStack {
+            Text("\(authStore.isOnboardingCompleted) \(authStore.isAuthenticated)" )
+            if authStore.isAuthenticated && authStore.isOnboardingCompleted {
+                VStack {
+                    ApplicationView()
+                        .navigationBarBackButtonHidden()
+                        .environment(self.authStore)
+                        .environment(self.userAPIClient)
+                        .environment(self.sessionAPIClient)
+                        .environment(self.checkInAPIClient)
+                        .refreshSessionOnAppear(self.authStore)
+                        .onAppear {
+                            if let userId = authStore.userId {
+                                self.userAPIClient.fetchUser(by: userId)
+                                self.sessionAPIClient
+                                    .fetchSessionsWithLogs(for: userId)
+                                self.checkInAPIClient.fetchCheckInLogs(for: userId)
+                            }
                         }
-                    }
-                    .onChange(of: authStore.userId) { _, userId in
-                        if let userId = userId {
-                            self.userAPIClient.fetchUser(by: userId)
-                            self.sessionAPIClient
-                                .fetchSessionsWithLogs(for: userId)
+                        .onChange(of: authStore.userId) { _, userId in
+                            if let userId = userId {
+                                self.userAPIClient.fetchUser(by: userId)
+                                self.sessionAPIClient
+                                    .fetchSessionsWithLogs(for: userId)
+                            }
                         }
-                    }
-            }
-        } else if inInitialConversation, let userId = authStore.userId, let initialConversationSessionLogId = initialConversationSessionLogId {
-            ConversationView(sessionApiClient: sessionAPIClient, authProvider: authStore, slug: "onboarding-v0", userId: userId, sessionLogId: initialConversationSessionLogId, maxSteps: 5, customEndConversationLabel: "Complete onboarding!", onSessionEnded: {
-                Task {
-                    await self.authStore.fetchUser()
-                    inInitialConversation = false
                 }
-            } ).tint(.jAccent)
-        } else {
-            OnboardingView(
-                showingAuth: $showingAuth,
-                auth: authStore,
-                userApiClient: userAPIClient,
-                onboardingLetterApiClient: onboardingLetterAPIClient,
-                onboardingCompleteApiClient: onboardingCompleteApiClient
-            ) { sessionLogId in
-                initialConversationSessionLogId = sessionLogId
-                inInitialConversation = true
-                onboardingStore.completeOnboarding()
-            }
-            .tint(.jAccent)
-            .sheet(isPresented: $showingAuth) {
-                AuthContainerView(authStore: authStore)
+            } else if inInitialConversation, let userId = authStore.userId, let initialConversationSessionLogId = initialConversationSessionLogId {
+                ConversationView(sessionApiClient: sessionAPIClient, authProvider: authStore, slug: "onboarding-v0", userId: userId, sessionLogId: initialConversationSessionLogId, maxSteps: 5, customEndConversationLabel: "Complete onboarding!", onSessionEnded: {
+                    Task {
+                        await self.authStore.fetchUser() {
+                            inInitialConversation = false
+                        }
+                    }
+                } ).tint(.jAccent)
+            } else {
+                OnboardingView(
+                    showingAuth: $showingAuth,
+                    auth: authStore,
+                    userApiClient: userAPIClient,
+                    onboardingLetterApiClient: onboardingLetterAPIClient,
+                    onboardingCompleteApiClient: onboardingCompleteApiClient
+                ) { sessionLogId in
+                    initialConversationSessionLogId = sessionLogId
+                    inInitialConversation = true
+                    onboardingStore.completeOnboarding()
+                }
+                .tint(.jAccent)
+                .sheet(isPresented: $showingAuth) {
+                    AuthContainerView(authStore: authStore)
+                }
             }
         }
     }
