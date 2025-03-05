@@ -16,13 +16,17 @@ struct StreamingMessage: ChatMessage {
     private(set) var currentStep: Int?
     private(set) var stepRepetitions: Int?
     private(set) var chunks: [ChatMessageChunk] = []
+    
+    var hasError: Bool {
+       self.chunks.contains(where: { $0.chunkType == "error" })
+    }
+    
 
     mutating func appendChunk(_ chunk: ChatMessageChunk) {
-        print("appending chunk with cS \(chunk.currentStep ?? -1) and sR \(chunk.stepRepetitions ?? -1)")
         chunks.append(chunk)
         currentStep = chunk.currentStep
         stepRepetitions = chunk.stepRepetitions
-        content += chunk.textDelta
+        content += chunk.textDelta ?? ""
     }
 
     enum CodingKeys: String, CodingKey {

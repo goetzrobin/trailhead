@@ -29,19 +29,20 @@ struct ContentView: View {
         self.userAPIClient = UserAPIClient(authProvider: authStore)
         self.sessionAPIClient = SessionAPIClient(authProvider: authStore)
         self.checkInAPIClient = CheckInAPIClient(authProvider: authStore)
-        self.onboardingLetterAPIClient = OnboardingLetterAPIClient(authProvider: authStore)
-        self.onboardingCompleteApiClient = CompleteOnboardingAPIClient(authProvider: authStore)
+        self.onboardingLetterAPIClient = OnboardingLetterAPIClient(
+            authProvider: authStore
+        )
+        self.onboardingCompleteApiClient = CompleteOnboardingAPIClient(
+            authProvider: authStore
+        )
 
         self.onboardingStore = OnboardingStore()
         self.showingAuth = false
     }
     
 
-//    var debug = true
+    var debug = true
     var body: some View {
-//        if debug {
-//            NotificationsView()
-//        } else
         if authStore.isAuthenticated && authStore.isOnboardingCompleted {
             VStack {
                 ApplicationView()
@@ -54,14 +55,16 @@ struct ContentView: View {
                     .onAppear {
                         if let userId = authStore.userId {
                             self.userAPIClient.fetchUser(by: userId)
-                            self.sessionAPIClient.fetchSessionsWithLogs(for: userId)
+                            self.sessionAPIClient
+                                .fetchSessionsWithLogs(for: userId)
                             self.checkInAPIClient.fetchCheckInLogs(for: userId)
                         }
                     }
                     .onChange(of: authStore.userId) { _, userId in
                         if let userId = userId {
                             self.userAPIClient.fetchUser(by: userId)
-                            self.sessionAPIClient.fetchSessionsWithLogs(for: userId)
+                            self.sessionAPIClient
+                                .fetchSessionsWithLogs(for: userId)
                         }
                     }
             }
@@ -73,7 +76,13 @@ struct ContentView: View {
                 }
             } ).tint(.jAccent)
         } else {
-            OnboardingView(showingAuth: $showingAuth, auth: authStore, userApiClient: userAPIClient, onboardingLetterApiClient: onboardingLetterAPIClient, onboardingCompleteApiClient: onboardingCompleteApiClient) { sessionLogId in
+            OnboardingView(
+                showingAuth: $showingAuth,
+                auth: authStore,
+                userApiClient: userAPIClient,
+                onboardingLetterApiClient: onboardingLetterAPIClient,
+                onboardingCompleteApiClient: onboardingCompleteApiClient
+            ) { sessionLogId in
                 initialConversationSessionLogId = sessionLogId
                 inInitialConversation = true
                 onboardingStore.completeOnboarding()

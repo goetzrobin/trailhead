@@ -250,7 +250,11 @@ struct ConversationMessageList: View {
                             EmptyView()
                         }
                         else {
-                            MessageBubbleView(viewModel: messageViewModel)
+                            MessageBubbleView(viewModel: messageViewModel) {
+                                Task {
+                                   await self.viewModel.retryOnError()
+                                }
+                            }
                                 .id(messageViewModel.id)
                                 .transition(.opacity)
                         }

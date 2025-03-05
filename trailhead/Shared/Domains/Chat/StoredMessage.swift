@@ -15,6 +15,7 @@ struct StoredMessage: ChatMessage {
     let formatVersion: ChatMessageFormatVersion
     let currentStep: Int?
     let stepRepetitions: Int?
+    let hasError: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case id, content, type, scope, createdAt, formatVersion, currentStep,
@@ -62,7 +63,7 @@ extension StoredMessage {
     static func from(_ chunk: ChatMessageChunk) -> StoredMessage {
         StoredMessage(
             id: chunk.id,
-            content: chunk.textDelta,
+            content: chunk.textDelta ?? "",
             type: chunk.type ?? .aiMessage,
             scope: chunk.scope ?? .external,
             createdAt: chunk.createdAt,

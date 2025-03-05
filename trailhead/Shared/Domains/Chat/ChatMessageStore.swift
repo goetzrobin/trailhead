@@ -122,29 +122,37 @@ enum MessageStreamState {
         }
     }
     
-    func startSession(with scores: SessionScores, onSuccess: ((_: SessionLog) -> Void)?) {
+    func startSession(
+        with scores: SessionScores,
+        onSuccess: ((_: SessionLog) -> Void)?
+    ) {
         self.messageApiClient.fetchMessagesStatus = .loading
-        self.sessionApiClient.startSession(with: slug, for: userId, scores: scores) {
-            newSessionLog in
-            print("new session log with id \(newSessionLog.id)")
-            self.sessionLogId = newSessionLog.id
-            self.messageApiClient.fetchMessagesStatus = .success([])
-            onSuccess?(newSessionLog)
-        }
+        self.sessionApiClient
+            .startSession(with: slug, for: userId, scores: scores) {
+                newSessionLog in
+                print("new session log with id \(newSessionLog.id)")
+                self.sessionLogId = newSessionLog.id
+                self.messageApiClient.fetchMessagesStatus = .success([])
+                onSuccess?(newSessionLog)
+            }
     }
     
     var endSessionStatus: ResponseStatus<SessionLog> {
         self.sessionApiClient.endSessionStatus
     }
-    func endSession(with scores: SessionScores, onSuccess: ((_: SessionLog) -> Void)?) {
+    func endSession(
+        with scores: SessionScores,
+        onSuccess: ((_: SessionLog) -> Void)?
+    ) {
         guard let sessionLogId = self.sessionLogId else {
             print("no session log id, cant end session")
             return
         }
-        self.sessionApiClient.endSession(ofLogWithId: sessionLogId, scores: scores) {
-            endedSessionLog in
-            onSuccess?(endedSessionLog)
-        }
+        self.sessionApiClient
+            .endSession(ofLogWithId: sessionLogId, scores: scores) {
+                endedSessionLog in
+                onSuccess?(endedSessionLog)
+            }
     }
     
     func refreshSessionsAndLogs() {
@@ -158,7 +166,7 @@ enum MessageStreamState {
         scope: String = "external",
         onStreamStart: (() -> Void)? = nil
     )
-        async
+    async
     {
         let sanitizedInput = inputText.trimmingCharacters(
             in: .whitespacesAndNewlines)
@@ -169,14 +177,16 @@ enum MessageStreamState {
             return
         }
 
-        // Create temporary user message
-        let tempId = UUID().uuidString
-        let userMessage = StreamingMessage.createForUser(
-            id: tempId,
-            content: sanitizedInput,
-            scope: ChatMessageScope(rawValue: scope) ?? .external
-        )
-        streamingMessages.append(userMessage)
+        if ChatMessageType(rawValue: type) == .userMessage {
+            // Create temporary user message
+            let tempId = UUID().uuidString
+            let userMessage = StreamingMessage.createForUser(
+                id: tempId,
+                content: sanitizedInput,
+                scope: ChatMessageScope(rawValue: scope) ?? .external
+            )
+            streamingMessages.append(userMessage)
+        }
 
         await startStreaming(
             userId: userId,
@@ -187,13 +197,22 @@ enum MessageStreamState {
             onStreamStart: onStreamStart ?? {})
     }
     
-    func haveSamReachOut(        onStreamStart: (() -> Void)? = nil
-) async {
+    func haveSamReachOut(onStreamStart: (() -> Void)? = nil
+    ) async {
         await self.sendMessage(with: "The user has started the conversation",
-        type: "ai-message",
-               scope: "internal")
+                               type: "ai-message",
+                               scope: "internal")
     }
 
+    func retryOnError() async {
+        if let erroredMessage = self.streamingMessages.last {
+            print("\(erroredMessage)")
+            self.streamingMessages.removeLast()
+            await self.sendMessage(with: "An error occured. Let's try to reach out again. The last thing the user was meant to see was: \(erroredMessage.content)",
+                                   type: "ai-message",
+                                   scope: "internal")
+        }
+    }
 
     private func startStreaming(
         userId: UUID,
@@ -207,9 +226,10 @@ enum MessageStreamState {
 
         streamTask = Task {
             do {
-                for try await event in try await self.messageApiClient.streamResponse(
-                    message: message, messageType: type, scope: scope,
-                    userId: userId, slug: slug)
+                for try await event in try await self.messageApiClient
+                    .streamResponse(
+                        message: message, messageType: type, scope: scope,
+                        userId: userId, slug: slug)
                 {
                     streamState = .streaming
 

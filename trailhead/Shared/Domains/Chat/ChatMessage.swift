@@ -8,6 +8,7 @@ protocol ChatMessage: Codable {
     var createdAt: Date { get }
     var currentStep: Int? { get }
     var stepRepetitions: Int? { get }
+    var hasError: Bool { get }
 }
 
 enum ChatMessageType: String, Codable {

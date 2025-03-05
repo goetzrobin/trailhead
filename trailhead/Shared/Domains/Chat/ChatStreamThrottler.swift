@@ -32,7 +32,7 @@ actor StreamThrottler {
                 let variation = Double.random(in: -randomVariation...randomVariation)
                 let delay = baseDelay * (1 + variation)
                 
-                try? await Task.sleep(for: .seconds(delay))
+                try? await Task.sleep(for: .seconds(0))
                 if let callback = callback {
                     await MainActor.run {
                         callback(chunk)
