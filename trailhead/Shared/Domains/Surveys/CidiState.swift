@@ -147,6 +147,7 @@ class CidiState {
         guard let userId = userId else { return }
         if self.timing == .pre {
             self.cidiApiClient.submitPreCidiSurvey(userId: userId, answers: finalData) { response in
+                self.cidiApiClient.fetchCombinedSurveys(userId: userId)
                 self.router.path.removeLast(6)
             }
         }

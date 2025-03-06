@@ -19,13 +19,13 @@ struct CidiView: View {
     private let router: AppRouter
     private let timing: CidiTiming
 
-    init(auth: AuthStore, router: AppRouter, timing: CidiTiming? = nil) {
-        self.userId = auth.userId
+    init(userId: UUID?, cidi: CidiAPIClient, router: AppRouter, timing: CidiTiming? = nil) {
+        self.userId = userId
         self.router = router
         self.timing = timing ?? .pre
         self.cidiState = CidiState(
             router: router,
-            cidiApiClient: CidiAPIClient(authProvider: auth),
+            cidiApiClient: cidi,
             timing: self.timing)
     }
 
@@ -196,11 +196,12 @@ struct CidiCompletionView: View {
 struct CidiNavigationContainer: View {
     @Environment(AuthStore.self) private var auth: AuthStore
     @Environment(AppRouter.self) private var router: AppRouter
+    @Environment(CidiAPIClient.self) private var cidi: CidiAPIClient
 
     let timing: CidiTiming?
 
     var body: some View {
-        CidiView(auth: auth, router: router, timing: timing)
+        CidiView(userId: auth.userId, cidi: cidi, router: router, timing: timing)
     }
 }
 
@@ -209,4 +210,5 @@ struct CidiNavigationContainer: View {
         .environment(AuthStore())
         .environment(AppRouter())
         .environment(ApplicationViewLayoutService())
+        .environment(CidiAPIClient(authProvider: AuthStore()))
 }

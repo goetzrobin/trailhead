@@ -127,6 +127,12 @@ struct GradientOverlayModifier: ViewModifier {
 }
 
 #Preview {
+    @Previewable @State var auth = AuthStore()
     ApplicationView()
-        .environment(AuthStore())
+        .environment(auth)
+        .environment(CheckInAPIClient(authProvider: auth))
+        .environment(CidiAPIClient(authProvider: auth))
+        .environment(SessionAPIClient(authProvider: auth))
+        .environment(UserAPIClient(authProvider: auth))
 }
+

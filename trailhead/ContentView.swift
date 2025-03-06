@@ -15,6 +15,7 @@ struct ContentView: View {
     @State private var checkInAPIClient: CheckInAPIClient
     @State private var onboardingLetterAPIClient: OnboardingLetterAPIClient
     @State private var onboardingCompleteApiClient: CompleteOnboardingAPIClient
+    @State private var cidiAPIClient: CidiAPIClient
     @State private var onboardingStore: OnboardingStore
     
     
@@ -35,6 +36,7 @@ struct ContentView: View {
         self.onboardingCompleteApiClient = CompleteOnboardingAPIClient(
             authProvider: authStore
         )
+        self.cidiAPIClient = CidiAPIClient(authProvider: authStore)
 
         self.onboardingStore = OnboardingStore()
         self.showingAuth = false
@@ -51,21 +53,17 @@ struct ContentView: View {
                     .environment(self.userAPIClient)
                     .environment(self.sessionAPIClient)
                     .environment(self.checkInAPIClient)
+                    .environment(self.cidiAPIClient)
                     .refreshSessionOnAppear(self.authStore)
                     .onAppear {
                         if let userId = authStore.userId {
-                            self.userAPIClient.fetchUser(by: userId)
-                            self.sessionAPIClient
-                                .fetchSessionsWithLogs(for: userId)
-                            self.checkInAPIClient.fetchCheckInLogs(for: userId)
+                            self.fetchData(userId: userId)
                         }
                     }
                     .onChange(of: authStore.userId) { _, userId in
                         if let userId = userId {
-                            self.userAPIClient.fetchUser(by: userId)
-                            self.sessionAPIClient
-                                .fetchSessionsWithLogs(for: userId)
-                        }
+                            self.fetchData(userId: userId)
+                            }
                     }
             }
         } else if inInitialConversation, let userId = authStore.userId, let initialConversationSessionLogId = initialConversationSessionLogId {
@@ -93,6 +91,14 @@ struct ContentView: View {
                 AuthContainerView(authStore: authStore)
             }
         }
+    }
+    
+    private func fetchData(userId: UUID) {
+            self.userAPIClient.fetchUser(by: userId)
+            self.sessionAPIClient
+                .fetchSessionsWithLogs(for: userId)
+            self.checkInAPIClient.fetchCheckInLogs(for: userId)
+            self.cidiAPIClient.fetchCombinedSurveys(userId: userId)
     }
 }
 
