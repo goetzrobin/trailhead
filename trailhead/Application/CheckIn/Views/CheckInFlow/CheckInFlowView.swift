@@ -19,72 +19,73 @@ struct CheckInFlowView: View {
     @Environment(AppRouter.self) var router: AppRouter
     @Environment(AuthStore.self) var authStore: AuthStore
     @Environment(SessionAPIClient.self) var sessionApiClient: SessionAPIClient
+    @Environment(CheckInAPIClient.self) var checkInApiClient: CheckInAPIClient
 
     @State var status: CheckInStatus = .pickingTopic
     var body: some View {
-        ZStack {
-            VStack {
-                if status == .pickingTopic {
-                    CloseHeader {
-                        self.dismiss()
-                    }
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Let's just check in")
-                                .font(.title)
-                                .bold()
-                            Text("Chat with Sam about whatever is on your mind")
-                                .padding(.bottom, 20)
-                            Button(
-                                action: {
-                                      withAnimation {
-                                            self.status = .inConversation
-                                        }
-                                   
-                                },
-                                label: {
-                                    Text("Begin")
-                                        .frame(maxWidth: .infinity)
-                                }
-                            ).buttonStyle(.jSecondary)
-                        }
-                        .padding(20)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Material.ultraThinMaterial)
-                        )
-
-                        Text("Or begin with a topic")
-                            .font(.subheadline)
+        VStack {
+            if status == .pickingTopic {
+                CloseHeader {
+                    self.dismiss()
+                }
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Let's just check in")
+                            .font(.title)
                             .bold()
-                            .padding(.vertical, 30)
-
-                        TopicsGridView(onTopicSelected: { topic in
-                            print("Selected topic: \(topic.slug)")
-                            self.status = .inConversation
-                        })
-
+                        Text("Chat with Sam about whatever is on your mind")
+                            .padding(.bottom, 20)
+                        Button(
+                            action: {
+                                withAnimation {
+                                    self.status = .inConversation
+                                }
+                                   
+                            },
+                            label: {
+                                Text("Begin")
+                                    .frame(maxWidth: .infinity)
+                            }
+                        ).buttonStyle(.jSecondary)
                     }
-                }
-                if status == .inConversation, let userId = authStore.userId {
-                    ConversationView(
-                        sessionApiClient: sessionApiClient,
-                        authProvider: authStore,
-                        slug: "unguided-open-v0",
-                        userId: userId,
-                        sessionLogId: nil,
-                        maxSteps: 3,
-                        isShowingXButton: true
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Material.ultraThinMaterial)
                     )
+
+                    Text("Or begin with a topic")
+                        .font(.subheadline)
+                        .bold()
+                        .padding(.vertical, 30)
+
+                    TopicsGridView(onTopicSelected: { topic in
+                        print("Selected topic: \(topic.slug)")
+                        self.status = .inConversation
+                    })
+
                 }
-                Spacer()
             }
-            .padding()
-            .safeAreaPadding(.top, 40)
+            if status == .inConversation, let userId = authStore.userId {
+                ConversationView(
+                    sessionApiClient: sessionApiClient,
+                    authProvider: authStore,
+                    slug: "unguided-open-v0",
+                    userId: userId,
+                    sessionLogId: nil,
+                    maxSteps: 3,
+                    isShowingXButton: true
+                ) {
+                    self.checkInApiClient.fetchCheckInLogs(for: userId)
+                }
+            }
         }
         .frame(maxHeight: .infinity)
-        .background(BackgroundBlurView(colorScheme: colorScheme))
-        .edgesIgnoringSafeArea(.all)
+        .padding()
+        .background {
+            BackgroundBlurView(colorScheme: colorScheme)
+                .edgesIgnoringSafeArea(.all)
+        }
     }
 }
 
@@ -92,7 +93,11 @@ struct CheckInFlowView: View {
 struct BackgroundBlurView: UIViewRepresentable {
     let colorScheme: ColorScheme
     func makeUIView(context: Context) -> UIView {
-        let view = UIVisualEffectView(effect: UIBlurEffect(style: self.colorScheme == .dark ? .dark : .light))
+        let view = UIVisualEffectView(
+            effect: UIBlurEffect(
+                style: self.colorScheme == .dark ? .dark : .light
+            )
+        )
         DispatchQueue.main.async {
             view.superview?.superview?.backgroundColor = .clear
         }

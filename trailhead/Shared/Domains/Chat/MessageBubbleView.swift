@@ -24,7 +24,7 @@ struct MessageBubbleView: View {
                          Text(viewModel.content)
                              .textSelection(.enabled)
                              .padding()
-                             .background(.secondary.opacity(0.1))
+                             .background(.ultraThinMaterial)
                              .cornerRadius(12)
                              .opacity(viewModel.message.hasError ? 0.4 : 1)
                          if viewModel.message.hasError {
@@ -45,7 +45,7 @@ struct MessageBubbleView: View {
                     Text(viewModel.content)
                         .textSelection(.enabled)
                         .padding()
-                        .background(Color.jAccent.opacity(0.2))
+                        .background(Color.jAccent.opacity(0.1))
                         .cornerRadius(12)
                 }
             }

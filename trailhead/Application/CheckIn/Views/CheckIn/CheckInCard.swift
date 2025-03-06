@@ -12,8 +12,9 @@ struct CheckInCard: View {
     @Environment(\.colorScheme) private var colorScheme
     // Example emotions - in practice you'd pass these in
     let date: Date;
-    let primaryEmotion: Emotion;
-    let secondaryEmotion: Emotion?
+    let summary: String;
+//    let primaryEmotion: Emotion;
+//    let secondaryEmotion: Emotion?
 
     // Helper function to create slightly randomized points based on index
     //    private func randomizedPoints(forEmotionCount count: Int) -> [[CGF]] {
@@ -35,17 +36,17 @@ struct CheckInCard: View {
 
     // Helper function to create colors array with emotion colors
     private func gradientColors() -> [Color] {
-        var colors: [Color] = Array(repeating: self.colorScheme == .light ? .white : .black, count: 9)
+        let colors: [Color] = Array(repeating: self.colorScheme == .light ? .white : .gray, count: 9)
 
         // Place first emotion color
-        colors[2] = primaryEmotion.color
-        colors[5] = primaryEmotion.color
-        colors[8] = primaryEmotion.color
-
-        // Place second emotion color if it exists
-        colors[1] = (secondaryEmotion ?? primaryEmotion).color
-        colors[7] = (secondaryEmotion ?? primaryEmotion).color
-        colors[4] = (secondaryEmotion ?? primaryEmotion).color
+//        colors[2] = primaryEmotion.color
+//        colors[5] = primaryEmotion.color
+//        colors[8] = primaryEmotion.color
+//
+//        // Place second emotion color if it exists
+//        colors[1] = (secondaryEmotion ?? primaryEmotion).color
+//        colors[7] = (secondaryEmotion ?? primaryEmotion).color
+//        colors[4] = (secondaryEmotion ?? primaryEmotion).color
 
         return colors
     }
@@ -82,7 +83,7 @@ struct CheckInCard: View {
             RoundedRectangle(cornerRadius: 3)
                 .fill((self.colorScheme == .light ? Color.white : Color.black).opacity(0.6))
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     VStack(alignment: .leading, spacing: -6) {
                         Text(dateFormatter.string(from: date))
@@ -92,34 +93,9 @@ struct CheckInCard: View {
                 }
                 Spacer()
                 HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: -12) {
-                        Text("I'm feeling")
+                    Text(summary)
                             .font(.title)
-                            .bold()
-                            .italic()
-                        HStack {
-
-                            Text(primaryEmotion.name.lowercased())
-                                .foregroundStyle(primaryEmotion.color)
-                                .font(.title)
-                                .bold()
-
-                            if let secondaryEmotion = secondaryEmotion {
-                                Text("&")
-                                    .font(.title)
-                                Text(secondaryEmotion.name.lowercased())
-                                    .foregroundStyle(secondaryEmotion.color)
-                                    .font(.title)
-                                    .bold()
-
-                            }
-                        }
-                    }
-                    Spacer()
-                    Image(systemName: "xmark")
-                        .resizable()
-                        .frame(width: 55, height: 55)
-                        .padding(.horizontal)
+                            .minimumScaleFactor(0.5)
                 }
             }
             .padding()
@@ -129,5 +105,5 @@ struct CheckInCard: View {
 }
 
 #Preview {
-    CheckInCard(date: Date(), primaryEmotion: pleasantLowEnergyEmotions[0][0], secondaryEmotion: nil )
+    CheckInCard(date: Date(), summary: "Hello World")
 }

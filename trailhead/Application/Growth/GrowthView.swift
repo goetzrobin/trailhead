@@ -33,38 +33,39 @@ struct GrowthGridView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                
-                Button(action: {router.path.append(StudyPath.pre)}) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.black)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.blue.opacity(0.3))
-                            .overlay(
-                                PatternOverlay(pattern: Pattern.stripes)
-                                    .opacity(0.1)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            // Journey Title
-                            Text("Join our study!")
-                                .font(.title2)
-                                .bold()
-                                .foregroundColor(.white)
+                if self.cidiAPIClient.fetchCombinedSurveyStatus.data?.pre == nil {
+                    Button(action: {router.path.append(StudyPath.pre)}) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.black)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.blue.opacity(0.3))
+                                .overlay(
+                                    PatternOverlay(pattern: Pattern.stripes)
+                                        .opacity(0.1)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
                             
-                            // Journey Description
-                            Text("Fill out a quick survey to help us understand your career aspritations and values better.")
-                                .font(.subheadline)
-                                .foregroundColor(.white.opacity(0.8))
-                                .lineLimit(2)
+                            VStack(alignment: .leading, spacing: 8) {
+                                // Journey Title
+                                Text("Join our study!")
+                                    .font(.title2)
+                                    .bold()
+                                    .foregroundColor(.white)
+                                
+                                // Journey Description
+                                Text("Fill out a quick survey to help us understand your career aspritations and values better.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .lineLimit(2)
+                            }
+                            .padding()
+                            
                         }
-                        .padding()
-
                     }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
                 
                 LazyVGrid(columns: columns, spacing: 16) {
                     JourneyCard(journey: journey) {

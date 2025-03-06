@@ -122,6 +122,10 @@ enum MessageStreamState {
         }
     }
     
+    
+    var startSessionStatus: ResponseStatus<SessionLog> {
+        self.sessionApiClient.startSessionStatus
+    }
     func startSession(
         with scores: SessionScores,
         onSuccess: ((_: SessionLog) -> Void)?
@@ -199,6 +203,9 @@ enum MessageStreamState {
     
     func haveSamReachOut(onStreamStart: (() -> Void)? = nil
     ) async {
+        if self.streamState == .starting || self.streamState == .streaming {
+            return
+        }
         await self.sendMessage(with: "The user has started the conversation",
                                type: "ai-message",
                                scope: "internal")
@@ -315,7 +322,7 @@ enum MessageStreamState {
 }
 
 // MARK: - Stream State
-enum StreamState {
+enum StreamState: Equatable {
     case idle
     case starting
     case streaming

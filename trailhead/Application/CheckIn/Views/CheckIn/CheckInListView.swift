@@ -14,7 +14,7 @@ struct CheckInListView: View {
         
         LazyVStack(spacing: 10) {
             ForEach(self.checkIns, id: \.self.id) { checkIn in
-                CheckInCard(date: checkIn.createdAt, primaryEmotion: Emotion.pleasantHighEnergy[0], secondaryEmotion: Emotion.pleasantHighEnergy[0])
+                CheckInCard(date: checkIn.createdAt, summary: checkIn.summary ?? "")
             }
         }
         .padding(.bottom, 80)

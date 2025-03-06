@@ -86,11 +86,13 @@ struct ConversationView: View {
             }
 
             VStack(alignment: .leading) {
-                CloseHeader {
-                    if (self.isConversationEnded) {
-                        self.dismiss()
-                    } else {
-                        self.isShowingEndConvoModal = true
+                if isShowingXButton {
+                    CloseHeader {
+                        if (self.isConversationEnded) {
+                            self.dismiss()
+                        } else {
+                            self.isShowingEndConvoModal = true
+                        }
                     }
                 }
                 ConversationMessageList(
@@ -100,6 +102,7 @@ struct ConversationView: View {
                     bottomID: bottomID,
                     initialDelay: delayInMs
                 )
+                
 
                 if self.sessionLogStatus == .inProgress && !isConversationEnded {
                     ZStack(alignment: .topTrailing) {
@@ -160,16 +163,15 @@ struct ConversationView: View {
                 SessionQuestionnaire(
                     completeDescription:
                         "Let's start today's conversation! Sam's already waiting for you!",
-                    completeButtonText: "Start Conversation"
+                    completeButtonText: "Start Conversation",
+                    isLoading: self.viewModel.startSessionStatus == .loading
                 ) { scores in
                     isAboutToStartConversation = true
                     // hit endpoint
                     self.viewModel.startSession(with: scores) { _ in
                         isShowingStartConvoModal = false
                         self.viewModel.refreshSessionsAndLogs()
-                        Task {
-                            await self.viewModel.haveSamReachOut()
-                        }
+                        // sam is going to reach out because of initial load marked as completed!
                     }
                 }
                 .presentationDetents([.height(270)])
@@ -268,10 +270,7 @@ struct ConversationMessageList: View {
                     }
 
                     if viewModel.isStreaming {
-                        HStack {
-                            Text("...")
-                            Spacer()
-                        }
+                        TypingIndicator()
                     }
 
                     // Invisible anchor view for scrolling
@@ -301,7 +300,9 @@ struct ConversationMessageList: View {
                     proxy: proxy
                 ))
         }
+        .scrollDismissesKeyboard(.interactively)
     }
+
 }
 
 /// Loading indicator shown while messages are being loaded
@@ -368,11 +369,10 @@ struct ConversationScrollModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onChange(of: isLoadingMessages) { oldValue, newValue in
-                if oldValue == true && newValue == false {
+                // Messages started loading - perform scroll because input lost focus and keyboard most likely got hidden
                     // Messages finished loading - perform initial scroll
                     handleInitialScroll()
-                }
-            }
+                       }
             .onChange(of: messageCount) { _, _ in
                 if isInitialLoadComplete {
                     scrollToBottom()
@@ -425,6 +425,73 @@ struct ConversationAppearanceModifier: ViewModifier {
             }
     }
 }
+
+
+struct TypingIndicator: View {
+    // Animation states
+    @State private var firstDotOffset: CGFloat = 0
+    @State private var secondDotOffset: CGFloat = 0
+    @State private var thirdDotOffset: CGFloat = 0
+    
+    @State private var firstDotOpacity: Double = 0.4
+    @State private var secondDotOpacity: Double = 0.4
+    @State private var thirdDotOpacity: Double = 0.4
+    
+    var body: some View {
+        HStack(spacing: 5) {
+            DotView(offset: firstDotOffset, opacity: firstDotOpacity)
+            DotView(offset: secondDotOffset, opacity: secondDotOpacity)
+            DotView(offset: thirdDotOffset, opacity: thirdDotOpacity)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.thinMaterial)
+        .cornerRadius(16)
+        .onAppear {
+            animateDots()
+        }
+    }
+    
+    // DotView is a single dot in the typing indicator
+    private struct DotView: View {
+        let offset: CGFloat
+        let opacity: Double
+        
+        var body: some View {
+            Circle()
+                .frame(width: 8, height: 8)
+                .foregroundStyle(.foreground)
+                .opacity(opacity)
+                .offset(y: offset)
+        }
+    }
+    
+    // Start the dot animations with different timing
+    private func animateDots() {
+        // First dot animation
+        withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+            firstDotOffset = -2
+            firstDotOpacity = 0.9
+        }
+        
+        // Second dot animation with delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                secondDotOffset = -3
+                secondDotOpacity = 0.9
+            }
+        }
+        
+        // Third dot animation with delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                thirdDotOffset = -2
+                thirdDotOpacity = 0.9
+            }
+        }
+    }
+}
+
 
 // MARK: - Preview
 #Preview {
