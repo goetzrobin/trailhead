@@ -43,7 +43,7 @@ struct OnboardingView: View {
                     UserConsentView {
                         self.isUserConsentGiven = true
                         self.router.path.append(
-                            OnboardingPath.userOnboarding)
+                            OnboardingPath.signUp)
                     }
                     .navigationBarBackButtonHidden()
 
