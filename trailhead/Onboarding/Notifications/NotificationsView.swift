@@ -12,12 +12,14 @@ struct NotificationsView: View {
     @State var manager = NotificationManager()
     var body: some View {
         if manager.setupState == .selectingFrequency || manager.setupState == .needsPermission {
-            NotificationFrequencySelectView(manager: manager, onSkip: self.onDone)
+            NotificationFrequencySelectView(
+                manager: manager,
+                onSkip: self.onDone
+            )
         } else if manager.setupState.isConfiguringTimes {
             NotificationTimeSelectView(manager: manager, onSkip: self.onDone)
         } else if manager.setupState == .completed {
-            Text("Done setting up notifications")
-            Button("Done") {
+            NotificaitonsSuccessView {
                 self.onDone()
             }
         }
@@ -70,7 +72,7 @@ struct NotificationTimeSelectView: View {
                 onContinue: {
                     Task {
                         savingPermissions = true
-                       let isSuccess = await self.manager.requestPermission()
+                        let isSuccess = await self.manager.requestPermission()
                         await self.manager.scheduleNotifications()
                         savingPermissions = false
                     }
@@ -111,14 +113,20 @@ struct NotificationTimeSelectView: View {
                     .padding(.horizontal)
                     
                     Spacer()
-                    Button(action: {
+                    Button(
+action: {
                         if let time = self.notificationTimeToEdit?.time {
-                            self.manager.updateNotificationTime(for: item.id, with: time)
+                            self.manager
+                                .updateNotificationTime(
+                                    for: item.id,
+                                    with: time
+                                )
                             self.notificationTimeToEdit = nil
                         }
-                    }, label: {
-                        Text("Save").frame(maxWidth: .infinity)
-                    })
+},
+label: {
+    Text("Save").frame(maxWidth: .infinity)
+})
                     .buttonStyle(.jPrimary)
                 }
                 .padding()
@@ -195,7 +203,12 @@ struct ContinueButtons: View {
     let onContinue: () -> Void
     let onSkip: () -> Void
     
-    init(isContinueEnabled: Bool, onContinue: @escaping () -> Void, onSkip: @escaping () -> Void, customContinueLabel: String? = nil) {
+    init(
+        isContinueEnabled: Bool,
+        onContinue: @escaping () -> Void,
+        onSkip: @escaping () -> Void,
+        customContinueLabel: String? = nil
+    ) {
         self.isContinueEnabled = isContinueEnabled
         self.onContinue = onContinue
         self.onSkip = onSkip

@@ -43,7 +43,7 @@ struct OnboardingView: View {
                     UserConsentView {
                         self.isUserConsentGiven = true
                         self.router.path.append(
-                            OnboardingPath.signUp)
+                            OnboardingPath.userOnboarding)
                     }
                     .navigationBarBackButtonHidden()
 
@@ -134,8 +134,11 @@ struct OnboardingView: View {
 
 struct CompletingOnboardingView: View {
     var body: some View {
-        Text("Completing onboarding")
-
+        ProgressView()
+            .scaleEffect(2.0)
+        Text("Please wait while Sam is reflecting on your letter...")
+            .font(.headline)
+            .padding(.top, 20)
     }
 }
 

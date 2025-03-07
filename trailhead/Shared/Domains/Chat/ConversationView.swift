@@ -29,8 +29,8 @@ struct ConversationView: View {
     @State private var isInitialLoadComplete = false
     @Namespace private var bottomID
 
-    private var slug: String?
-    private var userId: UUID?
+    private var slug: String
+    private var userId: UUID
     private var sessionLogId: UUID?
     private var sessionLogStatus: SessionLog.Status?
     private var maxSteps: Int?
@@ -269,7 +269,7 @@ struct ConversationMessageList: View {
                             .padding()
                     }
 
-                    if viewModel.isStreaming {
+                    if viewModel.isPreparingMessageStream {
                         TypingIndicator()
                     }
 
@@ -327,10 +327,10 @@ struct ChatTextFieldView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .frame(minHeight: 48)
-                .disabled(viewModel.isStreaming)
+                .disabled(viewModel.isPreparingMessageStream)
                 .submitLabel(.send)
                 .onSubmit {
-                    if !isNewMessageEmpty && !viewModel.isStreaming {
+                    if !isNewMessageEmpty && !viewModel.isPreparingMessageStream {
                         onSendMessage()
                     }
                 }
@@ -343,7 +343,7 @@ struct ChatTextFieldView: View {
                 )
                 .font(.title)
             }
-            .disabled(isNewMessageEmpty || viewModel.isStreaming)
+            .disabled(isNewMessageEmpty || viewModel.isPreparingMessageStream)
             .padding(.trailing, 12)
         }
         .background(
@@ -445,8 +445,6 @@ struct TypingIndicator: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(.thinMaterial)
-        .cornerRadius(16)
         .onAppear {
             animateDots()
         }

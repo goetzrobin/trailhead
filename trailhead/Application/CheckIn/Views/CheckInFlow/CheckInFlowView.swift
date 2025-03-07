@@ -25,46 +25,47 @@ struct CheckInFlowView: View {
     var body: some View {
         VStack {
             if status == .pickingTopic {
+                VStack {
                 CloseHeader {
                     self.dismiss()
                 }
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Let's just check in")
-                            .font(.title)
-                            .bold()
-                        Text("Chat with Sam about whatever is on your mind")
-                            .padding(.bottom, 20)
-                        Button(
-                            action: {
-                                withAnimation {
-                                    self.status = .inConversation
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Let's just check in")
+                                .font(.title)
+                                .bold()
+                            Text("Chat with Sam about whatever is on your mind")
+                                .padding(.bottom, 20)
+                            Button(
+                                action: {
+                                    withAnimation {
+                                        self.status = .inConversation
+                                    }
+                                    
+                                },
+                                label: {
+                                    Text("Begin")
+                                        .frame(maxWidth: .infinity)
                                 }
-                                   
-                            },
-                            label: {
-                                Text("Begin")
-                                    .frame(maxWidth: .infinity)
-                            }
-                        ).buttonStyle(.jSecondary)
+                            ).buttonStyle(.jSecondary)
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Material.ultraThinMaterial)
+                        )
+                        
+                        Text("Or begin with a topic")
+                            .font(.subheadline)
+                            .bold()
+                            .padding(.vertical, 30)
+                        
+                        TopicsGridView(onTopicSelected: { topic in
+                            print("Selected topic: \(topic.slug)")
+                            self.status = .inConversation
+                        })
                     }
-                    .padding(20)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Material.ultraThinMaterial)
-                    )
-
-                    Text("Or begin with a topic")
-                        .font(.subheadline)
-                        .bold()
-                        .padding(.vertical, 30)
-
-                    TopicsGridView(onTopicSelected: { topic in
-                        print("Selected topic: \(topic.slug)")
-                        self.status = .inConversation
-                    })
-
-                }
+                }.padding(.horizontal)
             }
             if status == .inConversation, let userId = authStore.userId {
                 ConversationView(
@@ -81,7 +82,6 @@ struct CheckInFlowView: View {
             }
         }
         .frame(maxHeight: .infinity)
-        .padding()
         .background {
             BackgroundBlurView(colorScheme: colorScheme)
                 .edgesIgnoringSafeArea(.all)
@@ -108,5 +108,10 @@ struct BackgroundBlurView: UIViewRepresentable {
 }
 
 #Preview {
-    CheckInFlowView().environment(AppRouter())
+    @Previewable @State var auth = AuthStore()
+    CheckInFlowView()
+        .environment(auth)
+        .environment(SessionAPIClient(authProvider: auth))
+        .environment(CheckInAPIClient(authProvider: auth))
+        .environment(AppRouter())
 }
