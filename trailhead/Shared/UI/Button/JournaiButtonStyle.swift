@@ -45,7 +45,7 @@ struct JournaiButtonStyle: ButtonStyle {
         case .secondary:
             return AnyShapeStyle(.ultraThickMaterial)
         case .accent:
-            return AnyShapeStyle(Color(red: 0.8, green: 0.7, blue: 1.0))
+            return AnyShapeStyle(Color.jAccent)
         case .white:
             return AnyShapeStyle(Color.white)
         }

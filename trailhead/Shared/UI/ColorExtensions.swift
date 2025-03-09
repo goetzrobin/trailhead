@@ -8,7 +8,7 @@
 import SwiftUI
 
 extension Color {
-    static let jAccent = Color(red: 0.8, green: 0.7, blue: 1.0)
+    static let jAccent = Color.blue
     
     static let platformBackgroundColor: Color = {
         return Color(UIColor.secondarySystemBackground)

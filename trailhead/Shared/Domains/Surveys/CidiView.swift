@@ -13,13 +13,18 @@ enum CidiTiming {
 // MARK: - Main CIDI View
 struct CidiView: View {
     @Environment(ApplicationViewLayoutService.self) var layoutService:
-        ApplicationViewLayoutService
+    ApplicationViewLayoutService
     @State private var cidiState: CidiState
     private let userId: UUID?
     private let router: AppRouter
     private let timing: CidiTiming
 
-    init(userId: UUID?, cidi: CidiAPIClient, router: AppRouter, timing: CidiTiming? = nil) {
+    init(
+        userId: UUID?,
+        cidi: CidiAPIClient,
+        router: AppRouter,
+        timing: CidiTiming? = nil
+    ) {
         self.userId = userId
         self.router = router
         self.timing = timing ?? .pre
@@ -72,9 +77,18 @@ struct CidiView: View {
             surveyView(for: .careerCommitment)
 
         case .completed:
-            CidiCompletionView {
+            CidiCompletionView(
+                isLoading: cidiState.submitCidiStatus == .loading
+            ) {
                 cidiState.submitCidi(for: userId)
-            }.navigationTitle("")
+            }
+            .navigationTitle("")
+            .onAppear {
+                self.cidiState.isOnFinalStep = true
+            }
+            .onDisappear {
+                self.cidiState.isOnFinalStep = false
+            }
 
         case .submitted:
             // This is a terminal state
@@ -155,6 +169,7 @@ struct CidiWelcomeView: View {
 
 // MARK: - Completion View
 struct CidiCompletionView: View {
+    let isLoading: Bool
     let onFinish: () -> Void
 
     var body: some View {
@@ -180,11 +195,18 @@ struct CidiCompletionView: View {
             Spacer()
 
             Button(action: onFinish) {
-                Text("Continue")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
+                HStack {
+                    if isLoading {
+                        ProgressView()
+                            .frame(width: 23, height: 23)
+                            .tint(.black)
+                    } else {
+                        Text("Continue")
+                        .fontWeight(.semibold)                    }
+                }.frame(maxWidth: .infinity)
             }
             .buttonStyle(.jSecondary)
+            .disabled(isLoading)
             .padding(.horizontal)
             .padding(.bottom)
         }
@@ -201,7 +223,12 @@ struct CidiNavigationContainer: View {
     let timing: CidiTiming?
 
     var body: some View {
-        CidiView(userId: auth.userId, cidi: cidi, router: router, timing: timing)
+        CidiView(
+            userId: auth.userId,
+            cidi: cidi,
+            router: router,
+            timing: timing
+        )
     }
 }
 

@@ -142,19 +142,30 @@ class CidiState {
         setupSurveys()
     }
     
+    var isOnFinalStep = false
+    
+    var submitCidiStatus: ResponseStatus<CidiSurveyResponse> {
+        self.cidiApiClient.submitCidiSurveyStatus
+    }
+    
     /// Submit CIDI data
     func submitCidi(for userId: UUID?) {
         guard let userId = userId else { return }
         if self.timing == .pre {
             self.cidiApiClient.submitPreCidiSurvey(userId: userId, answers: finalData) { response in
                 self.cidiApiClient.fetchCombinedSurveys(userId: userId)
-                self.router.path.removeLast(6)
+                if self.isOnFinalStep {
+                    self.router.path.removeLast(6)
+                }
             }
         }
         
         if self.timing == .post {
             self.cidiApiClient.submitPostCidiSurvey(userId: userId, answers: finalData) { response in
-                self.router.path.removeLast(6)
+                self.cidiApiClient.fetchCombinedSurveys(userId: userId)
+                if self.isOnFinalStep {
+                    self.router.path.removeLast(6)
+                }
             }
         }
     }
