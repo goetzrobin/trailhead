@@ -40,20 +40,31 @@ struct ContentView: View {
 
         self.onboardingStore = OnboardingStore()
         self.showingAuth = false
-    }
+            }
     
 
     var debug = true
     var body: some View {
+  
         if authStore.isAuthenticated && authStore.isOnboardingCompleted {
             VStack {
-                ApplicationView()
-                    .navigationBarBackButtonHidden()
-                    .environment(self.authStore)
-                    .environment(self.userAPIClient)
-                    .environment(self.sessionAPIClient)
-                    .environment(self.checkInAPIClient)
-                    .environment(self.cidiAPIClient)
+                
+//                ApplicationView()
+//                    .navigationBarBackButtonHidden()
+//                    .environment(self.authStore)
+//                    .environment(self.userAPIClient)
+//                    .environment(self.sessionAPIClient)
+//                    .environment(self.checkInAPIClient)
+//                    .environment(self.cidiAPIClient)
+//                
+//
+                
+  
+                ConversationViewV2(config: ConversationConfig(
+                    sessionApiClient: SessionAPIClient(authProvider: authStore),
+                    authProvider: authStore, slug: "unguided-open-v0", userId: authStore.userId!, sessionLogId: nil)
+                )
+                
                     .refreshSessionOnAppear(self.authStore)
                     .onAppear {
                         if let userId = authStore.userId {
