@@ -55,30 +55,30 @@ struct CheckInFlowView: View {
                                 .fill(Material.ultraThinMaterial)
                         )
                         
-                        Text("Or begin with a topic")
+                        Text("Why check-ins matter:")
                             .font(.subheadline)
                             .bold()
-                            .padding(.vertical, 30)
+                            .padding(.top, 20)
                         
-                        TopicsGridView(onTopicSelected: { topic in
-                            print("Selected topic: \(topic.slug)")
-                            self.status = .inConversation
-                        })
+                        Text("Regular conversations with Sam help you process your emotions in a safe space. By talking through what you're feeling, you develop clarity and perspective. Sam helps you understand your emotional patterns, build resilience, and discover strategies that work uniquely for you.")
+                            .foregroundColor(.secondary)
+                            .padding(.top, 5)
                     }
                 }.padding(.horizontal)
             }
             if status == .inConversation, let userId = authStore.userId {
-                ConversationView(
+                ConversationViewV2(config: ConversationConfig(
                     sessionApiClient: sessionApiClient,
                     authProvider: authStore,
                     slug: "unguided-open-v0",
                     userId: userId,
                     sessionLogId: nil,
-                    maxSteps: 3,
-                    isShowingXButton: true
-                ) {
-                    self.checkInApiClient.fetchCheckInLogs(for: userId)
-                }
+                    maxSteps: nil,
+                    onSessionEnded: {
+                        self.checkInApiClient.fetchCheckInLogs(for: userId)
+                        self.dismiss()
+                    }
+                ))
             }
         }
         .frame(maxHeight: .infinity)
@@ -114,4 +114,5 @@ struct BackgroundBlurView: UIViewRepresentable {
         .environment(SessionAPIClient(authProvider: auth))
         .environment(CheckInAPIClient(authProvider: auth))
         .environment(AppRouter())
+        .background(.background)
 }

@@ -16,13 +16,16 @@ struct SessionDetailView: View {
     var body: some View {
         VStack(spacing: 16) {
             if let slug = session.slug, let userId = authStore.userId {
-                ConversationView(
+                ConversationViewV2(config:
+                    ConversationConfig(
                     sessionApiClient: sessionApiClient,
                     authProvider: authStore,
                     slug: slug,
                     userId: userId,
-                    sessionLogId: session.logs?.first?.id, maxSteps: session.stepCount,
-                    sessionLogStatus: session.logs?.first?.status
+                    sessionLogId: session.logs?.first?.id,
+                    sessionLogStatus: session.logs?.first?.status,
+                    maxSteps: session.stepCount
+                    )
                 )
             } else {
                 Text("Missing required information about session or user.")

@@ -11,6 +11,7 @@ struct PersonalityOnboardingFlowView: View {
     let router: AppRouter
     let userApiClient: UserAPIClient
     let userID: UUID?
+    let isSkippingPrompts: Bool
     let onFlowComplete: () -> Void
 
     @State var progressStore = PersonalityOnboardingProgressStore()
@@ -96,11 +97,24 @@ struct PersonalityOnboardingFlowView: View {
                     },
                     onContinue: {
                         if let userId = self.userID {
-                            userApiClient.updatePersonality(for: userId, with: PersonalityDataRequest(promptResponses: beLikeYouStore.promptResponses.filter {$0 != nil}.map {prompt in return PersonalityDataRequest.PromptResponse(promptId: prompt!.option.id, content: prompt!.response)}, mentorTraits: mentorTraitsStore.selectedMentorTraits.map{ return $0.name }, interests: excitedAboutStore.selectedInterests.map { return $0.name} )) { _ in
-                                self.onFlowComplete()
-                            }
+                            userApiClient
+                                .updatePersonality(for: userId, with: PersonalityDataRequest(
+                                    promptResponses:
+                                        beLikeYouStore.promptResponses
+                                        .map {prompt in return
+                                            PersonalityDataRequest
+                                                .PromptResponse(
+                                                    promptId: prompt.option.id,
+                                                    content: prompt.response ?? "")
+                                        },
+                                    mentorTraits:
+                                        mentorTraitsStore.selectedMentorTraits
+                                        .map{ return $0.name },
+                                    interests: excitedAboutStore.selectedInterests
+                                        .map { return $0.name} )) { _ in
+                                            self.onFlowComplete()
+                                        }
                         }
-                                                            
                     }
                 )
                 .environment(self.router)
@@ -113,7 +127,7 @@ struct PersonalityOnboardingFlowView: View {
 #Preview {
     @Bindable var router = AppRouter()
     NavigationStack(path: $router.path) {
-        PersonalityOnboardingFlowView(router: router, userApiClient: UserAPIClient(authProvider: AuthStore()), userID: UUID()) {
+        PersonalityOnboardingFlowView(router: router, userApiClient: UserAPIClient(authProvider: AuthStore()), userID: UUID(), isSkippingPrompts: false) {
             print("Completed flow")
         }
     }

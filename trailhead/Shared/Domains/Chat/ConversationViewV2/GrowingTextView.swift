@@ -11,9 +11,9 @@ fileprivate let INITIAL_HEIGHT: CGFloat = 38
 struct GrowingTextView: View {
     @FocusState.Binding var isFocused: Bool
     let isEndConversationEnabled: Bool
+    let customEndConversationLabel: String?
     let onEndConversation: () -> Void
     let onSend: (String) -> Void
-    
     
     @State private var text: String = ""
     @State private var textViewHeight: CGFloat = INITIAL_HEIGHT
@@ -60,7 +60,8 @@ struct GrowingTextView: View {
                     isEndConversationEnabled: self.isEndConversationEnabled,
                     isSendMessageEnabled: !isTextEmpty,
                     onEndConversation: self.onEndConversation,
-                    onSendMessage: { self.sendMessage()}
+                    onSendMessage: { self.sendMessage()},
+                    customEndConversationLabel: customEndConversationLabel
                 )
                 .padding(.horizontal, 16)
                 .padding(.bottom, 8)
@@ -192,12 +193,13 @@ struct ActionButtons: View {
     let isSendMessageEnabled: Bool
     var onEndConversation: () -> Void
     var onSendMessage: () -> Void
+    var customEndConversationLabel: String? = nil
     
     var body: some View {
         HStack(alignment: .center) {
             Button(action: onEndConversation, label: {
                 Label {
-                    Text("End Conversation")
+                    Text(customEndConversationLabel ?? "End Conversation")
                 } icon: {
                     Image(systemName: "hand.wave.fill")
                         .accessibilityHidden(true)
@@ -249,7 +251,7 @@ struct RoundedCornerShape: Shape {
 // Preview Provider
 #Preview {
     @Previewable @FocusState var isFocused: Bool
-    GrowingTextView(isFocused: $isFocused, isEndConversationEnabled: true, onEndConversation: {} ,onSend: { message in
+    GrowingTextView(isFocused: $isFocused, isEndConversationEnabled: true, customEndConversationLabel: nil, onEndConversation: {} ,onSend: { message in
         print(message)
     })
 }

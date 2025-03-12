@@ -6,5 +6,9 @@
 //
 struct PromptOptionAndResponse {
     var option: PromptOption
-    var response: String
+    var response: String?
+    
+    var isEmpty: Bool {
+         return response == nil || response!.isEmpty
+     }
 }

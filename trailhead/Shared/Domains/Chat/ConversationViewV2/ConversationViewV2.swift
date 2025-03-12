@@ -19,6 +19,7 @@ struct ConversationViewV2: View {
     // Optional properties with defaults
     private var maxSteps: Int?
     private var customEndConversationLabel: String?
+    private var isAutoStartingWithoutPreSurvey: Bool = false
     
     let onPostSurveySuccess: (() -> Void)?
 
@@ -60,6 +61,7 @@ struct ConversationViewV2: View {
             slug: self.slug
         )
         self.onPostSurveySuccess = config.onSessionEnded
+        self.isAutoStartingWithoutPreSurvey = config.isAutoStartingWithoutPreSurvey
     }
     
     private func handleOnAppear() {
@@ -68,6 +70,9 @@ struct ConversationViewV2: View {
                 "[ConversationView2] loading initial messages for \(sessionLogId.uuidString)"
             )
             self.chatMessageViewModel.fetchStoredMessages(for: sessionLogId)
+            if isAutoStartingWithoutPreSurvey {
+                self.chatMessageViewModel.haveSamReachOut()
+            }
         } else {
             print(
                 "[ConversationView2] no session log id, showing pre survey to start session with slug \(self.slug)"
@@ -131,6 +136,7 @@ struct ConversationViewV2: View {
             GrowingTextView(
                 isFocused: $isFocused,
                 isEndConversationEnabled: self.isEndConversationEnabled,
+                customEndConversationLabel: customEndConversationLabel,
                 onEndConversation: self.sessionManagementViewModel.handleOnEndConversation,
                 onSend: {
                     message in self.chatMessageViewModel.sendMessage(message)

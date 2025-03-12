@@ -15,9 +15,10 @@ struct ConversationConfig {
     
     // Optional parameters with defaults
     var sessionLogId: UUID? = nil
-    var sessionLogStatus: SessionLog.Status = .inProgress
+    var sessionLogStatus: SessionLog.Status? = nil
     var maxSteps: Int? = nil
     var isShowingXButton: Bool = false
     var customEndConversationLabel: String? = nil
     var onSessionEnded: (() -> Void)? = nil
+    var isAutoStartingWithoutPreSurvey: Bool = false
 }

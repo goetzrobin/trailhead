@@ -15,6 +15,8 @@ struct PersonalityOnboardingBeLikeYouView: View {
     let isLoading: Bool
     let onBack: () -> Void
     let onContinue: () -> Void
+    
+    @State var currentEditingIndex: Int? = nil
 
     var body: some View {
         PersonalityOnboardingWrapper(
@@ -26,25 +28,68 @@ struct PersonalityOnboardingBeLikeYouView: View {
                     .font(.largeTitle)
                     .bold()
                     .padding(.bottom, 10)
-                Text("No need to impress - just be real!")
-                    .padding(.bottom, 30)
-
-                PromptListView(
-                    promptAndResponses: store.promptResponses,
-                    onChooseNewPrompt: { index in
-                        store.startNewResponse(at: index)
-                        router.path.append(BeLikeYouPath.selectPrompt)
-                    },
-                    onUpdatePrompt: { index in
-                        store.startUpdatingResponse(at: index)
-                        router.path.append(BeLikeYouPath.enterPromptResponse)
-                    })
-
+                Text(
+                    "Share a bit about yourself to help us understand you better."
+                )
+                .padding(.bottom, 30)
+                    
+                // Add list of prompts here
+                ScrollView {
+                    VStack(spacing: 16) {
+                        ForEach(
+                            0..<store.promptResponses.count,
+                            id: \.self
+                        ) { index in
+                            let prompt = store.promptResponses[index]
+                                
+                            Button(action: {
+                                store.startEditing(at: index)
+                                currentEditingIndex = index
+                                router.path
+                                    .append(BeLikeYouPath.enterPromptResponse)
+                            }) {
+                                HStack(alignment: .top) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(prompt.option.prompt)
+                                            .foregroundStyle(.foreground)
+                                            .font(.headline)
+                                            .multilineTextAlignment(.leading)
+                                            
+                                        if let response = prompt.response, !response.isEmpty {
+                                            Text(response)
+                                                .font(.subheadline)
+                                                .foregroundColor(.secondary)
+                                                .lineLimit(8)
+                                        } else {
+                                            Text(
+                                                "Tap to share your thoughts..."
+                                            )
+                                            .font(.subheadline)
+                                            .foregroundColor(.secondary)
+                                            .padding(.bottom, 40)
+                                        }
+                                    }
+                                        
+                                    Spacer()
+                                        
+                                    Text(prompt.isEmpty ? "Add" : "Edit")
+                                        .foregroundColor(.blue)
+                                        .bold()
+                                }
+                                .padding()
+                                .background(Color.secondary.opacity(0.1))
+                                .cornerRadius(8)
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.bottom, 20)
+                }
+              
                 Spacer()
 
                 HStack(alignment: .center) {
                     Text(
-                        "\(store.respondedToResponsesCount)/\(store.promptResponses.count) added"
+                        "\(store.completedResponsesCount)/\(store.promptResponses.count) added"
                     )
                     Spacer()
                     ContinueButton(
@@ -53,41 +98,26 @@ struct PersonalityOnboardingBeLikeYouView: View {
                     ) {
                         self.onContinue()
                     }
-                    .disabled(store.respondedToResponsesCount == 0 || isLoading)
+                    .disabled(
+                        store.completedResponsesCount < store.promptResponses.count || isLoading
+                    )
                 }
             }
             .navigationDestination(for: BeLikeYouPath.self) { path in
                 switch path {
-                case .selectPrompt:
-                    PromptSelectionView(
-                        recordedPromptResponses: store.promptResponses,
-                        onSelectOption: { promptOption in
-                            store.selectPrompt(promptOption)
-                            router.path.append(
-                                BeLikeYouPath.enterPromptResponse)
-                        },
-                        onClose: {
-                            store.discardDraft()
-                            router.path.removeLast()
-                        })
-
                 case .enterPromptResponse:
                     EnterPromptResponseView(
-                        prompt: store.currentDraft?.option?.prompt ?? "",
-                        response: store.currentResponseDraftBinding
-                            ?? Binding(projectedValue: .constant("")),
+                        prompt: store.currentPrompt,
+                        response: store.responseTextBinding ?? Binding
+                            .constant(""),
                         maxCharsAllowed: store.maxCharsAllowed,
                         onCancel: {
+                            store.cancelEditing()
                             router.path.removeLast()
                         },
                         onDone: {
-                            let popCount =
-                                store.isUpdatingExistingResponse ? 1 : 2
-                            // get count first because comitting will reset it
-                            store.commitCurrentDraft()
-
-                            router.path.removeLast(
-                                min(router.path.count, popCount))
+                            store.finishEditing()
+                            router.path.removeLast(min(router.path.count,1))
                         }
                     )
                 }
@@ -98,6 +128,7 @@ struct PersonalityOnboardingBeLikeYouView: View {
 
 #Preview {
     @Previewable @State var appRouter = AppRouter()
+    @Previewable @State var personalityStore = PersonalityOnboardingBeLikeYouStore()
     NavigationStack(path: $appRouter.path) {
         PersonalityOnboardingBeLikeYouView(
             currentStepProgress: 0.5,
@@ -105,7 +136,7 @@ struct PersonalityOnboardingBeLikeYouView: View {
             onBack: { print("back") },
             onContinue: { print("continue") }
         )
-        .environment(PersonalityOnboardingBeLikeYouStore())
+        .environment(personalityStore)
         .environment(appRouter)
     }
 }

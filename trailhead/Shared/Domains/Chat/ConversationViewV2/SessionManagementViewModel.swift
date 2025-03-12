@@ -18,7 +18,7 @@ import SwiftUI
     
     // State
     private(set) var sessionLogId: UUID?
-    private(set) var sessionLogStatus: SessionLog.Status = .inProgress
+    private(set) var sessionLogStatus: SessionLog.Status? = nil
     
     private(set) var isShowingPreSurvey = false
     private(set) var isSessionStartLoading = false
@@ -33,7 +33,7 @@ import SwiftUI
         slug: String,
         userId: UUID,
         sessionLogId: UUID?,
-        sessionLogStatus: SessionLog.Status = .inProgress
+        sessionLogStatus: SessionLog.Status? = nil
     ) {
         self.sessionAPIClient = sessionAPIClient
         self.slug = slug

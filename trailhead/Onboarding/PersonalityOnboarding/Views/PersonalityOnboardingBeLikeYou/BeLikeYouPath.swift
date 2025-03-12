@@ -10,6 +10,5 @@ import SwiftUI
 
 enum BeLikeYouPath: Hashable {
     // empty path -> overview
-    case selectPrompt
     case enterPromptResponse
 }

@@ -15,6 +15,7 @@ private let prompts: [LocalizedStringKey] = [
     "What's an important belief that guides your choices?",
     "What, in life, do you want to be known for?",
     "All done! Feel free to read through the letter again and **add what you'd like me to know about you**!",
+    ""
 ]
 
 struct RandomPromptButton: View {

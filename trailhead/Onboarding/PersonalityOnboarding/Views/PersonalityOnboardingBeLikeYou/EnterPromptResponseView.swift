@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct EnterPromptResponseView: View {
-
     let prompt: String
     let response: Binding<String>
     let maxCharsAllowed: Int
@@ -29,7 +28,7 @@ struct EnterPromptResponseView: View {
                     .font(.title)
                     .bold()
                     .padding(.bottom)
-                    Text("Let Sam know...")
+                    Text("In your own words...")
                         .foregroundStyle(.primary)
                         .font(.title)
                         .bold()
@@ -81,10 +80,10 @@ struct EnterPromptResponseView: View {
     }
 }
 
-#Preview {
-    @Previewable @State var text = ""
-    EnterPromptResponseView(
-        prompt: "I was today years old when I learned",
-        response: $text, maxCharsAllowed: 160, onCancel: { print("Cancel") },
-        onDone: { print("Done") })
-}
+//#Preview {
+//    @Previewable @State var text = ""
+//    EnterPromptResponseView(
+//        prompt: "I was today years old when I learned",
+//        response: $text, maxCharsAllowed: 160, onCancel: { print("Cancel") },
+//        onDone: { print("Done") })
+//}

@@ -48,22 +48,15 @@ struct ContentView: View {
   
         if authStore.isAuthenticated && authStore.isOnboardingCompleted {
             VStack {
+                ApplicationView()
+                    .navigationBarBackButtonHidden()
+                    .environment(self.authStore)
+                    .environment(self.userAPIClient)
+                    .environment(self.sessionAPIClient)
+                    .environment(self.checkInAPIClient)
+                    .environment(self.cidiAPIClient)
                 
-//                ApplicationView()
-//                    .navigationBarBackButtonHidden()
-//                    .environment(self.authStore)
-//                    .environment(self.userAPIClient)
-//                    .environment(self.sessionAPIClient)
-//                    .environment(self.checkInAPIClient)
-//                    .environment(self.cidiAPIClient)
-//                
-//
-                
-  
-                ConversationViewV2(config: ConversationConfig(
-                    sessionApiClient: SessionAPIClient(authProvider: authStore),
-                    authProvider: authStore, slug: "unguided-open-v0", userId: authStore.userId!, sessionLogId: nil)
-                )
+
                 
                     .refreshSessionOnAppear(self.authStore)
                     .onAppear {
@@ -78,14 +71,27 @@ struct ContentView: View {
                     }
             }
         } else if inInitialConversation, let userId = authStore.userId, let initialConversationSessionLogId = initialConversationSessionLogId {
-            ConversationView(sessionApiClient: sessionAPIClient, authProvider: authStore, slug: "onboarding-v0", userId: userId, sessionLogId: initialConversationSessionLogId, maxSteps: 5, customEndConversationLabel: "Complete onboarding!", onSessionEnded: {
-                Task {
-                    await self.authStore.fetchUser() {
-                        inInitialConversation = false
-                    }
-                }
-            } ).tint(.jAccent)
-        } else {
+            ConversationViewV2(
+                config:
+                    ConversationConfig(
+                        sessionApiClient: sessionAPIClient,
+                        authProvider: authStore,
+                        slug: "onboarding-v0",
+                        userId: userId,
+                        sessionLogId: initialConversationSessionLogId,
+                        maxSteps: 5,
+                        customEndConversationLabel: "Complete onboarding!",
+                        onSessionEnded: {
+                            Task {
+                                await self.authStore.fetchUser() {
+                                    inInitialConversation = false
+                                }
+                            }
+                        },
+                        isAutoStartingWithoutPreSurvey: true
+                    )
+            )
+            } else {
             OnboardingView(
                 showingAuth: $showingAuth,
                 auth: authStore,

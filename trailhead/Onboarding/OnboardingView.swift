@@ -19,6 +19,7 @@ struct OnboardingView: View {
     @State var router = AppRouter()
     @State private var isUserConsentGiven = false
     @State private var isSignUpCompleted = false
+    @State private var isSkippingPrompts = false
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -80,6 +81,7 @@ struct OnboardingView: View {
                         router: self.router,
                         userApiClient: self.userApiClient,
                         userID: self.auth.userId,
+                        isSkippingPrompts: self.isSkippingPrompts,
                         onFlowComplete: {
                             self.router.path.append(
                                 OnboardingPath
