@@ -52,7 +52,7 @@ struct SurveyView: View {
     @State var motivationScore = 1
     
     var body: some View {
-        VStack {
+        VStack(alignment: .leading) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(title)
                     .font(.title)
@@ -60,7 +60,8 @@ struct SurveyView: View {
                 Text(subtitle)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-            }.frame(height: 120)
+            }
+            .frame(height: 120)
             .padding(.top, 20)
                         
             VStack(alignment: .leading, spacing: 24) {

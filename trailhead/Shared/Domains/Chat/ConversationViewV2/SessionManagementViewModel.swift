@@ -15,7 +15,6 @@ import SwiftUI
     // Required properties
     private let slug: String
     private let userId: UUID
-    private let onSessionEnded: (() -> Void)?
     
     // State
     private(set) var sessionLogId: UUID?
@@ -34,15 +33,13 @@ import SwiftUI
         slug: String,
         userId: UUID,
         sessionLogId: UUID?,
-        sessionLogStatus: SessionLog.Status = .inProgress,
-        onSessionEnded: (() -> Void)?
+        sessionLogStatus: SessionLog.Status = .inProgress
     ) {
         self.sessionAPIClient = sessionAPIClient
         self.slug = slug
         self.userId = userId
         self.sessionLogId = sessionLogId
         self.sessionLogStatus = sessionLogStatus
-        self.onSessionEnded = onSessionEnded
     }
     
     func showPreSurvey() {
@@ -52,7 +49,8 @@ import SwiftUI
     func handlePreSurveySubmission(
         feeling: Int,
         anxiety: Int,
-        motivation: Int
+        motivation: Int,
+        onSuccess: (() -> Void)? = nil
     ) {
         print(
             "[ConversationView2] submitting pre survey mood \(feeling) - anxiety \(anxiety) - motivation \(motivation)"
@@ -79,11 +77,11 @@ import SwiftUI
                     self.isSessionStartLoading = false
                     self.isShowingPreSurvey = false
                 }
-                
+                onSuccess?()
             }
     }
     
-    func handlePostSurveySubmission(feeling: Int, anxiety: Int, motivation: Int) {
+    func handlePostSurveySubmission(feeling: Int, anxiety: Int, motivation: Int, onSuccess: (() -> Void)? = nil) {
         guard let sessionLogId = self.sessionLogId else {
             print("No session log id for \(self.slug) - cannot submit post survey")
             return
@@ -106,7 +104,7 @@ import SwiftUI
                 self.isSessionEndLoading = false
                 self.isShowingPostSurvey = false
             }
-                self.onSessionEnded?()
+                onSuccess?()
         }
     }
     

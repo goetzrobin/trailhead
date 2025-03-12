@@ -59,21 +59,24 @@ struct UITextViewWrapper: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: UITextView, context: Context) {
-        // Find the placeholder label using its tag
-        let placeholderLabel = uiView.viewWithTag(placeholderTag) as? UILabel
-        
-        // Update text if it has changed
-        uiView.text = self.text
-        // Manually trigger height recalculation when text changes
-        recalculateHeight(view: uiView)
-  
-        
-        // Update placeholder visibility
-        placeholderLabel?.isHidden = !uiView.text.isEmpty
-        
-        if uiView.window != nil, !context.coordinator.didSetupInitialHeight {
+        DispatchQueue.main.async {
+            // Find the placeholder label using its tag
+            let placeholderLabel = uiView.viewWithTag(placeholderTag) as? UILabel
+            
+            
+            // Update text if it has changed
+            uiView.text = self.text
+            // Manually trigger height recalculation when text changes
             recalculateHeight(view: uiView)
-            context.coordinator.didSetupInitialHeight = true
+            
+            
+            // Update placeholder visibility
+            placeholderLabel?.isHidden = !uiView.text.isEmpty
+            
+            if uiView.window != nil, !context.coordinator.didSetupInitialHeight {
+                recalculateHeight(view: uiView)
+                context.coordinator.didSetupInitialHeight = true
+            }
         }
     }
     

@@ -112,7 +112,7 @@ class StreamDelegate: NSObject, URLSessionDataDelegate {
         return chunks.compactMap { chunk in
             guard chunk.hasPrefix("data: ") else {
                 print("\(chunk) has invalid format")
-                return nil
+                return .error(ChatAPIError.invalidChunkData)
             }
 
             let content = String(chunk.dropFirst(6))
@@ -141,7 +141,7 @@ class StreamDelegate: NSObject, URLSessionDataDelegate {
 
     /// Fetches all stored messages for a given session log.
     /// Calls `/api/session-logs/{sessionLogId}/messages` and decodes into `[StoredMessage]` model.
-    func fetchStoredMessages(for sessionLogId: UUID) {
+    func fetchStoredMessages(for sessionLogId: UUID, onSuccess: ((_: [StoredMessage]) -> Void)? = nil) {
         fetchMessagesStatus = .loading
 
         let endpoint = URL(string: env.API_ROOT_URL)!
@@ -183,6 +183,7 @@ class StreamDelegate: NSObject, URLSessionDataDelegate {
                     [StoredMessage].self, from: data)
                 print("messages decoded")
                 self.fetchMessagesStatus = .success(messages)
+                onSuccess?(messages)
                 print("fetchmessages status updated")
             } catch {
                 print("Decoding error:", error)

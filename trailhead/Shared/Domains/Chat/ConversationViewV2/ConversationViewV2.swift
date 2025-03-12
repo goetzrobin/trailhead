@@ -19,6 +19,8 @@ struct ConversationViewV2: View {
     // Optional properties with defaults
     private var maxSteps: Int?
     private var customEndConversationLabel: String?
+    
+    let onPostSurveySuccess: (() -> Void)?
 
     // State
     @State private var scrollViewHeight: CGFloat = 0
@@ -32,8 +34,9 @@ struct ConversationViewV2: View {
 
     
     private var isShowingScrollToBottomButton: Bool {
-        scrollOffset < -20.0 && !self.chatMessageViewModel.isLoadingExistingMessages &&
-        self.chatMessageViewModel.messages.count > 0
+        scrollOffset < -20.0 &&
+        !self.chatMessageViewModel.isLoadingExistingMessages &&
+        self.chatMessageViewModel.messagePairs.count > 0
     }
     
     init(config: ConversationConfig) {
@@ -47,15 +50,16 @@ struct ConversationViewV2: View {
             slug: self.slug,
             userId: self.userId,
             sessionLogId: config.sessionLogId,
-            sessionLogStatus: config.sessionLogStatus,
-            onSessionEnded: config.onSessionEnded
+            sessionLogStatus: config.sessionLogStatus
         )
         self.chatMessageViewModel = ChatMessageViewModel(
             messageAPIClient: ChatMessageAPIClient(
                 authProvider: config.authProvider
             ),
-            sessionLogId: config.sessionLogId
+            userId: self.userId,
+            slug: self.slug
         )
+        self.onPostSurveySuccess = config.onSessionEnded
     }
     
     private func handleOnAppear() {
@@ -63,7 +67,7 @@ struct ConversationViewV2: View {
             print(
                 "[ConversationView2] loading initial messages for \(sessionLogId.uuidString)"
             )
-            self.chatMessageViewModel.fetchStoredMessages()
+            self.chatMessageViewModel.fetchStoredMessages(for: sessionLogId)
         } else {
             print(
                 "[ConversationView2] no session log id, showing pre survey to start session with slug \(self.slug)"
@@ -84,7 +88,11 @@ struct ConversationViewV2: View {
     var body: some View {
         ConversationWrapperView(
             sessionManagementViewModel: self.sessionManagementViewModel,
-            handleOnAppear: self.handleOnAppear
+            handleOnAppear: self.handleOnAppear,
+            onPreSurveySuccess: {
+                self.chatMessageViewModel.haveSamReachOut()
+            },
+            onPostSurveySuccess: self.onPostSurveySuccess
         ) {
             ChatList(
                 scrollViewHeight: self.$scrollViewHeight,
@@ -98,31 +106,18 @@ struct ConversationViewV2: View {
                     // we are inversed so bottom is first element
                     Color.clear.frame(height: 1).id("bottom")
                     
-                    // then we always display the currently streamed message
-                    //
-                    //                StreamingMessageWithPlaceholderView(
-                    //                    isStarting: self.isStarting,
-                    //                    scrollViewHeight: self.scrollViewHeight
-                    //                )
-                    //
-                    ForEach(self.chatMessageViewModel.messages) { message in
-                        Text("\(message)")
+                    ForEach(
+                        Array(
+                            self.chatMessageViewModel.messagePairs.enumerated()
+                        ),
+                        id: \.element.id
+                    ) { index, messagePair in
+                        MessageInListView(
+                            messagePair: messagePair,
+                            isFirstMessagePair: index == 0,
+                            onErrorMessageTap: { self.chatMessageViewModel.retry(index: index)},
+                            scrollViewHeight: self.scrollViewHeight)
                     }
-//                    ForEach(
-//                        self.chatMessageViewModel.messages,
-//                        id: \.id
-//                    ) { message in
-//                        HStack {
-//                            if message.sender == .ai {
-//                                MentorMessageView(
-//                                    message: message.content,
-//                                    isComplete: message.state == .complete
-//                                )
-//                            } else {
-//                                UserMessageView(message: message)
-//                            }
-//                        }
-//                    }
                 }
             }
             .onTapGesture {
@@ -145,18 +140,55 @@ struct ConversationViewV2: View {
     }
 }
 
+struct MessageInListView: View {
+    let messagePair: MessagePair
+    let isFirstMessagePair: Bool
+    let onErrorMessageTap: () -> Void
+    let scrollViewHeight: CGFloat
+    var body: some View {
+        if messagePair.isPair, let aiMessage = messagePair.aiMessage, let userMessage = messagePair.userMessage {
+            StreamingMessageWithPlaceholderView(
+                mentorMessage: aiMessage,
+                userMessage: userMessage,
+                isWaitingForStreamToStart: messagePair.isWaitingForStreamToStart,
+                isStreamCompleted: messagePair.isComplete,
+                isMakingRoomForStream: isFirstMessagePair,
+                isUserMessageInternal: messagePair.isUserMessageInternal,
+                isError: messagePair.isError,
+                onErrorMessageTap: onErrorMessageTap,
+                scrollViewHeight: scrollViewHeight
+            )
+        } else if let aiMessage = messagePair.aiMessage {
+            MentorMessageView(
+                message: aiMessage,
+                isComplete: messagePair.isComplete,
+                isError: messagePair.isError
+            )
+        } else if let userMessage = messagePair.userMessage {
+            UserMessageView(message: userMessage)
+        }
+    }
+}
+
 struct ConversationWrapperView<Content: View>: View {
     let content: Content
     let sessionManagementViewModel: SessionManagementViewModel
+    let onPreSurveySuccess: (() -> Void)?
+    let onPostSurveySuccess: (() -> Void)?
     let handleOnAppear: () -> Void
     
-    init(sessionManagementViewModel: SessionManagementViewModel,
-         handleOnAppear: @escaping () -> Void,
-         @ViewBuilder content: () -> Content) {
-        self.sessionManagementViewModel = sessionManagementViewModel
-        self.handleOnAppear = handleOnAppear
-        self.content = content()
-    }
+    init(
+        sessionManagementViewModel: SessionManagementViewModel,
+        handleOnAppear: @escaping () -> Void,
+        onPreSurveySuccess: (() -> Void)?,
+        onPostSurveySuccess: (() -> Void)?,
+        @ViewBuilder content: () -> Content) {
+            self.sessionManagementViewModel = sessionManagementViewModel
+            self.handleOnAppear = handleOnAppear
+            self.content = content()
+            self.onPreSurveySuccess = onPreSurveySuccess
+            self.onPostSurveySuccess = onPostSurveySuccess
+        }
     
     var body: some View {
         VStack {
@@ -166,14 +198,16 @@ struct ConversationWrapperView<Content: View>: View {
                 Binding(get: {
             self.sessionManagementViewModel.isShowingPreSurvey
         }, set: {_ in})
-        ) {            SurveyView(
+        ) {
+            SurveyView(
             variant: .pre,
             isLoading: self.sessionManagementViewModel.isSessionStartLoading
         ) { feeling, anxiety, motivation in
             self.sessionManagementViewModel.handlePreSurveySubmission(
                 feeling: feeling,
                 anxiety: anxiety,
-                motivation: motivation
+                motivation: motivation,
+                onSuccess: self.onPreSurveySuccess
             )
         }
         .surveySheet()
@@ -190,7 +224,8 @@ struct ConversationWrapperView<Content: View>: View {
                 self.sessionManagementViewModel.handlePostSurveySubmission(
                     feeling: feeling,
                     anxiety: anxiety,
-                    motivation: motivation
+                    motivation: motivation,
+                    onSuccess: self.onPostSurveySuccess
                 )
             }
             .surveySheet(isDismissable: true)
@@ -199,34 +234,6 @@ struct ConversationWrapperView<Content: View>: View {
     }
 }
 
-
-struct StreamingMessageWithPlaceholderView: View {
-    let mentorMessage: String
-    let userMessage: String
-    let isWaitingForStreamToStart: Bool
-    let isStreamCompleted: Bool
-    let scrollViewHeight: CGFloat
-    var body: some View {
-        VStack {
-            UserMessageView(message: userMessage)
-            if isWaitingForStreamToStart {
-                HStack {
-                    PulsingCircle()
-                    Spacer()
-                }
-            } else {
-                MentorMessageView(
-                    message: self.mentorMessage,
-                    isComplete: self.isStreamCompleted
-                )
-            }
-        }.frame(maxWidth: .infinity,
-                idealHeight: !self.isStreamCompleted ? max(0,scrollViewHeight - 50) : nil,
-                maxHeight: scrollViewHeight,
-                alignment: .topTrailing
-        )
-    }
-}
 
 #Preview {
     let authStore = AuthStore()
