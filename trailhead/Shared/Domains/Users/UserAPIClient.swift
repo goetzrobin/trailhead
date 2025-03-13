@@ -240,6 +240,7 @@ struct UserUpdateData: Codable {
     let pronouns: String?
     var birthday: Date?
     var graduationYear: Int?
+    var referredBy: String?
     var cohort: String?
     var genderIdentity: String?
     var ethnicity: String?

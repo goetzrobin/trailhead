@@ -117,6 +117,8 @@ let DIVISION_OPTIONS: [OnboardingOption] = [
     }
 
     var graduationYear = 2025
+    
+    var referredBy = ""
 
     var selectedCohort: OnboardingOption?
     var customCohort: String?

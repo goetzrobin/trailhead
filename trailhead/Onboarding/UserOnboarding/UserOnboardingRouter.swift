@@ -14,6 +14,7 @@ enum UserOnboardingPath: Hashable {
     case ethnicity
     case genderIdentity
     case gradYear
+    case referredBy
     case cohort
     case competitionLevel
     case submittingInfo

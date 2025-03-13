@@ -87,6 +87,16 @@ struct UserOnboardingFlowView: View {
                     onContinue: {
                         self.router.path.append(
                             UserOnboardingPath
+                                .referredBy)
+                    }
+                )
+                .environment(self.userOnboardingStore)
+            case .referredBy:
+                UserOnboardingReferredByView(
+                    onBack: { self.router.path.removeLast() },
+                    onContinue: {
+                        self.router.path.append(
+                            UserOnboardingPath
                                 .cohort)
                     }
                 )
