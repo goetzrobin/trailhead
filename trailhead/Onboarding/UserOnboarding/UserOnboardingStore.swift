@@ -186,9 +186,16 @@ let DIVISION_OPTIONS: [OnboardingOption] = [
         }
 
         return UserUpdateData(
-            name: name, pronouns: pronouns, birthday: birthday,
-            graduationYear: graduationYear, cohort: cohort,
-            genderIdentity: genderIdentity, ethnicity: ethnicity,
-            competitionLevel: competitionLevel, ncaaDivision: ncaaDivision)
+            name: name,
+            pronouns: pronouns,
+            birthday: birthday,
+            graduationYear: graduationYear,
+            referredBy: referredBy,
+            cohort: cohort,
+            genderIdentity: genderIdentity,
+            ethnicity: ethnicity,
+            competitionLevel: competitionLevel,
+            ncaaDivision: ncaaDivision
+        )
     }
 }
