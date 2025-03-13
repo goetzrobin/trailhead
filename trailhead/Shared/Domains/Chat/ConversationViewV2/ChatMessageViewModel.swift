@@ -469,7 +469,7 @@ struct MessageAdapter {
         }
         
         print("[MessageAdapter] Created \(pairs.count) pairs")
-        return pairs.sorted { $0.timestamp < $1.timestamp }
+        return pairs.sorted { $0.timestamp > $1.timestamp }
     }
     
     // Create AI-only message
