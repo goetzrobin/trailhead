@@ -46,6 +46,10 @@ import SwiftUI
         self.isShowingPreSurvey = true
     }
     
+    func hidePreSurvey() {
+        self.isShowingPreSurvey = false
+    }
+    
     func handlePreSurveySubmission(
         feeling: Int,
         anxiety: Int,
@@ -69,10 +73,10 @@ import SwiftUI
                 )
             ) { newLog in
                 print(
-                    "[ConversationView2] submitted pre survey and successfully started session and got log with id \(newLog.id)"
+                    "[ConversationView2] submitted pre survey and successfully started session and got log with id \(newLog.id) - \(newLog.status)"
                 )
                 self.sessionLogId = newLog.id
-                self.sessionLogStatus = newLog.status
+                self.sessionLogStatus = .inProgress
                 withAnimation {
                     self.isSessionStartLoading = false
                     self.isShowingPreSurvey = false
@@ -99,7 +103,8 @@ import SwiftUI
                     motivationScore: motivation
                 )
             ) { newLog in
-                print("[ConversationView2] submitted post survey and successfully ended session log \(sessionLogId) for \(self.slug)")
+                print("[ConversationView2] submitted post survey and successfully ended session log \(sessionLogId) \(newLog.status) for \(self.slug)")
+                self.sessionLogStatus = .completed
             withAnimation {
                 self.isSessionEndLoading = false
                 self.isShowingPostSurvey = false

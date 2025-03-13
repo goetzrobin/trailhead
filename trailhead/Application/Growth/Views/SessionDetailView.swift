@@ -10,6 +10,7 @@ struct SessionDetailView: View {
     @Environment(ApplicationViewLayoutService.self) var layoutService: ApplicationViewLayoutService
     @Environment(AuthStore.self) var authStore: AuthStore
     @Environment(SessionAPIClient.self) var sessionApiClient: SessionAPIClient
+    @Environment(\.dismiss) var dismiss
     let session: Session
     @State private var isSessionCompleted = false
 
@@ -24,7 +25,9 @@ struct SessionDetailView: View {
                     userId: userId,
                     sessionLogId: session.logs?.first?.id,
                     sessionLogStatus: session.logs?.first?.status,
-                    maxSteps: session.stepCount
+                    maxSteps: session.stepCount,
+                    onNotNow: {self.dismiss()},
+                    skipOnNotNowPreSurveySheetDismiss: true
                     )
                 )
             } else {
@@ -39,10 +42,6 @@ struct SessionDetailView: View {
         .onDisappear {
             layoutService.showTabBar(animate: true)
         }
-    }
-    
-    func onSessionStarted() {
-        
     }
 }
 

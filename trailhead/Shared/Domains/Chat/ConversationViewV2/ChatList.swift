@@ -56,16 +56,15 @@ struct ChatLayout: _VariadicView_MultiViewRoot {
                             key: ScrollOffsetKey.self,
                             value: geometry.frame(in: .named("scrollView")).origin
                         )
-                }
+            // I dont know why 5 here and 15 below look alright?
+                }.frame(height: 5)
                 
-                
-                VStack(alignment: .leading, spacing: 24) {
-                    ForEach(children) { child in
-                        child
-                            .inverted()
-                    }
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(children) { $0.inverted()}
                 }
-                .background(
+                .padding(.horizontal)
+
+                .background {
                     GeometryReader { geometry in
                         Color.clear
                             .preference(
@@ -73,8 +72,9 @@ struct ChatLayout: _VariadicView_MultiViewRoot {
                                 value: geometry.size.height
                             )
                     }
-                )
-                .padding(.horizontal)
+                }
+                // like this is a hack but idk what
+                .offset(y: -15)
             }
             .coordinateSpace(name: "scrollView")
             .background {
@@ -84,21 +84,12 @@ struct ChatLayout: _VariadicView_MultiViewRoot {
                                     value: geometry.frame(in: .global).height)
                 }
             }
-            .onPreferenceChange(ScrollViewHeightKey.self) { height in
-                self.scrollViewHeight = height
-                print("ScrollView height: \(height)")
-            }
-            .onPreferenceChange(ContentHeightKey.self) { height in
-                self.contentHeight = height
-            }
-            .onPreferenceChange(ScrollOffsetKey.self) { offset in
-                self.scrollOffset = offset.y
-            }
-            .inverted()
-            .onAppear {
-                self.scrollProxy = scrollProxy
-            }
-        }
+            .onPreferenceChange(ScrollViewHeightKey.self) { self.scrollViewHeight = $0 }
+            .onPreferenceChange(ContentHeightKey.self) { self.contentHeight = $0 }
+            .onPreferenceChange(ScrollOffsetKey.self) { self.scrollOffset = $0.y }
+            .onAppear { self.scrollProxy = scrollProxy }
+            
+        }.inverted()
     }
 }
 

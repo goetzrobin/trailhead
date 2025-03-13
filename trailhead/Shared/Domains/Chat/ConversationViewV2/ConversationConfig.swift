@@ -21,4 +21,6 @@ struct ConversationConfig {
     var customEndConversationLabel: String? = nil
     var onSessionEnded: (() -> Void)? = nil
     var isAutoStartingWithoutPreSurvey: Bool = false
+    var onNotNow: (() -> Void)? = nil
+    var skipOnNotNowPreSurveySheetDismiss: Bool = false
 }

@@ -77,6 +77,11 @@ struct CheckInFlowView: View {
                     onSessionEnded: {
                         self.checkInApiClient.fetchCheckInLogs(for: userId)
                         self.dismiss()
+                    },
+                    onNotNow: {
+                        withAnimation {
+                            self.status = .pickingTopic
+                        }
                     }
                 ))
             }

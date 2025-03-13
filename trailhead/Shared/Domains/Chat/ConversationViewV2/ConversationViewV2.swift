@@ -22,6 +22,8 @@ struct ConversationViewV2: View {
     private var isAutoStartingWithoutPreSurvey: Bool = false
     
     let onPostSurveySuccess: (() -> Void)?
+    let onNotNow: (() -> Void)?
+    let skipOnNotNowPreSurveySheetDismiss: Bool
 
     // State
     @State private var scrollViewHeight: CGFloat = 0
@@ -31,9 +33,14 @@ struct ConversationViewV2: View {
     
     @FocusState private var isFocused: Bool
     @State private var reply: String = ""
-    @State private var isEndConversationEnabled = true
-
+    @State private var isEndConversationEnabled = false
+    @State private var isShowingTextView = false
+    @State private var isShowingMessageView = false
     
+    private var currentStep: Int {
+        self.chatMessageViewModel.messagePairs.first?.chunks?.last?.currentStep ?? 0
+    }
+
     private var isShowingScrollToBottomButton: Bool {
         scrollOffset < -20.0 &&
         !self.chatMessageViewModel.isLoadingExistingMessages &&
@@ -60,8 +67,27 @@ struct ConversationViewV2: View {
             userId: self.userId,
             slug: self.slug
         )
-        self.onPostSurveySuccess = config.onSessionEnded
+
         self.isAutoStartingWithoutPreSurvey = config.isAutoStartingWithoutPreSurvey
+        
+        self.onPostSurveySuccess = config.onSessionEnded
+        self.onNotNow = config.onNotNow
+        self.skipOnNotNowPreSurveySheetDismiss = config.skipOnNotNowPreSurveySheetDismiss
+    }
+    
+    private func onNotNowWithDelayTakenIntoAccount() {
+        guard let onNotNow = onNotNow else {
+            return
+        }
+        if skipOnNotNowPreSurveySheetDismiss {
+            self.sessionManagementViewModel.hidePreSurvey()
+            onNotNow()
+        } else {
+            self.sessionManagementViewModel.hidePreSurvey()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                onNotNow()
+            }
+        }
     }
     
     private func handleOnAppear() {
@@ -71,6 +97,7 @@ struct ConversationViewV2: View {
             )
             self.chatMessageViewModel.fetchStoredMessages(for: sessionLogId)
             if isAutoStartingWithoutPreSurvey {
+                self.isShowingMessageView = true
                 self.chatMessageViewModel.haveSamReachOut()
             }
         } else {
@@ -78,6 +105,36 @@ struct ConversationViewV2: View {
                 "[ConversationView2] no session log id, showing pre survey to start session with slug \(self.slug)"
             )
             self.sessionManagementViewModel.showPreSurvey()
+        }
+        
+        self.updateEndConversationBasedOnMaxSteps(currentStep: self.currentStep)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            withAnimation {
+                self.isShowingMessageView = true
+            }
+        }
+    }
+    
+    
+    private func handleOnPreSurveySuccess() {
+        withAnimation {
+            self.isShowingTextView = true
+        }
+        self.chatMessageViewModel.haveSamReachOut()
+    }
+    
+    private func handleOnLoadingExistingMessagesChange(_ isLoading: Bool) {
+        print("[ConversationView2] isLoadingExistingMessagesChange: \(isLoading)")
+        if !isLoading {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation {
+                    self.isShowingMessageView = true
+                    if self.sessionManagementViewModel.sessionLogStatus == .inProgress {
+                        self.isShowingTextView = true
+                    }
+                }
+            }
         }
     }
     
@@ -90,24 +147,39 @@ struct ConversationViewV2: View {
         }
     }
     
+    private func handleOnErrorMessageTap(index: Int) {
+        self.chatMessageViewModel.retry(index: index)
+    }
+    
+    private func updateEndConversationBasedOnMaxSteps(currentStep: Int) {
+        print("[ConversationView2] updating if user can end conversation based on currentStep:\(currentStep) and maxSteps:\(maxSteps ?? -1)")
+        self.isEndConversationEnabled =
+        // if we are already enabled once we don't go back
+        self.isEndConversationEnabled ||
+        // if no max steps always enabled else need to reach max steps
+        (self.maxSteps == nil || self.maxSteps == currentStep)
+    }
+    
     var body: some View {
-        ConversationWrapperView(
-            sessionManagementViewModel: self.sessionManagementViewModel,
-            handleOnAppear: self.handleOnAppear,
-            onPreSurveySuccess: {
-                self.chatMessageViewModel.haveSamReachOut()
-            },
-            onPostSurveySuccess: self.onPostSurveySuccess
-        ) {
-            ChatList(
-                scrollViewHeight: self.$scrollViewHeight,
-                contentHeight: self.$contentHeight,
-                scrollOffset: self.$scrollOffset,
-                scrollProxy: self.$scrollProxy
+        ZStack(alignment: .top) {
+            if self.chatMessageViewModel.isLoadingExistingMessages {
+                ProgressView().padding(.top, UIScreen.main.bounds.height * 0.3)
+                    .tint(.secondary)
+            }
+            ConversationWrapperView(
+                sessionManagementViewModel: self.sessionManagementViewModel,
+                handleOnAppear: self.handleOnAppear,
+                onNotNow: self.onNotNow != nil ? self.onNotNowWithDelayTakenIntoAccount : nil,
+                onPreSurveySuccess: self.handleOnPreSurveySuccess,
+                onPostSurveySuccess: self.onPostSurveySuccess
             ) {
-                if self.chatMessageViewModel.isLoadingExistingMessages {
-                    ProgressView().padding(.bottom, scrollViewHeight * 0.4)
-                } else {
+               ChatList(
+                    scrollViewHeight: self.$scrollViewHeight,
+                    contentHeight: self.$contentHeight,
+                    scrollOffset: self.$scrollOffset,
+                    scrollProxy: self.$scrollProxy
+                ) {
+                    
                     // we are inversed so bottom is first element
                     Color.clear.frame(height: 1).id("bottom")
                     
@@ -120,29 +192,40 @@ struct ConversationViewV2: View {
                         MessageInListView(
                             messagePair: messagePair,
                             isFirstMessagePair: index == 0,
-                            onErrorMessageTap: { self.chatMessageViewModel.retry(index: index)},
+                            onErrorMessageTap: { self.handleOnErrorMessageTap(index: index) },
                             scrollViewHeight: self.scrollViewHeight)
                     }
+                    
+                }
+                .opacity(self.isShowingMessageView ? 1 : 0)
+                .onChange(of: self.chatMessageViewModel.isLoadingExistingMessages) { _, newValue in
+                    self.handleOnLoadingExistingMessagesChange(newValue)
+                }
+                .onChange(of: self.currentStep) { _, newValue in
+                    self.updateEndConversationBasedOnMaxSteps(currentStep: newValue)
+                }
+                .onTapGesture {
+                    self.isFocused = false
+                }
+                .overlay(alignment: .bottom) {
+                    if isShowingScrollToBottomButton {
+                        ScrollToBottomButton(onTap: self.handleOnScrollToBottom)
+                    }
+                }
+                if (sessionManagementViewModel.sessionLogId == nil || sessionManagementViewModel.sessionLogStatus == .inProgress) {
+                    GrowingTextView(
+                        isFocused: $isFocused,
+                        isEndConversationEnabled: self.isEndConversationEnabled,
+                        customEndConversationLabel: customEndConversationLabel,
+                        onEndConversation: self.sessionManagementViewModel.handleOnEndConversation,
+                        onSend: {  message in self.chatMessageViewModel.sendMessage(message)
+                        }
+                    ).opacity(self.isShowingTextView ? 1 : 0)
                 }
             }
-            .onTapGesture {
-                self.isFocused = false
-            }
-            .overlay(alignment: .bottom) {
-                if isShowingScrollToBottomButton {
-                    ScrollToBottomButton(onTap: self.handleOnScrollToBottom)
-                }
-            }
-            GrowingTextView(
-                isFocused: $isFocused,
-                isEndConversationEnabled: self.isEndConversationEnabled,
-                customEndConversationLabel: customEndConversationLabel,
-                onEndConversation: self.sessionManagementViewModel.handleOnEndConversation,
-                onSend: {
-                    message in self.chatMessageViewModel.sendMessage(message)
-                }
-            )
+            
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -172,6 +255,7 @@ struct MessageInListView: View {
             )
         } else if let userMessage = messagePair.userMessage {
             UserMessageView(message: userMessage)
+                .padding(.bottom, 24)
         }
     }
 }
@@ -179,21 +263,25 @@ struct MessageInListView: View {
 struct ConversationWrapperView<Content: View>: View {
     let content: Content
     let sessionManagementViewModel: SessionManagementViewModel
+    let onNotNow: (() -> Void)?
     let onPreSurveySuccess: (() -> Void)?
     let onPostSurveySuccess: (() -> Void)?
     let handleOnAppear: () -> Void
-    
+        
     init(
         sessionManagementViewModel: SessionManagementViewModel,
         handleOnAppear: @escaping () -> Void,
+        onNotNow: (() -> Void)?,
         onPreSurveySuccess: (() -> Void)?,
         onPostSurveySuccess: (() -> Void)?,
         @ViewBuilder content: () -> Content) {
             self.sessionManagementViewModel = sessionManagementViewModel
             self.handleOnAppear = handleOnAppear
-            self.content = content()
+            self.onNotNow = onNotNow
             self.onPreSurveySuccess = onPreSurveySuccess
             self.onPostSurveySuccess = onPostSurveySuccess
+            
+            self.content = content()
         }
     
     var body: some View {
@@ -207,7 +295,8 @@ struct ConversationWrapperView<Content: View>: View {
         ) {
             SurveyView(
             variant: .pre,
-            isLoading: self.sessionManagementViewModel.isSessionStartLoading
+            isLoading: self.sessionManagementViewModel.isSessionStartLoading,
+            onNotNow: onNotNow
         ) { feeling, anxiety, motivation in
             self.sessionManagementViewModel.handlePreSurveySubmission(
                 feeling: feeling,
@@ -246,6 +335,6 @@ struct ConversationWrapperView<Content: View>: View {
     let config = ConversationConfig(
         sessionApiClient: SessionAPIClient(authProvider: authStore),
         authProvider: authStore, slug: "test-v0", userId: UUID(),
-        sessionLogId: UUID())
+        sessionLogId: nil)
     ConversationViewV2(config: config)
 }

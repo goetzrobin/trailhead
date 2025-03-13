@@ -20,15 +20,18 @@ struct SurveyView: View {
     
     let variant: SurveyVariant
     let isLoading: Bool
+    let onNotNow: (() -> Void)?
     let onSurveyCompleted: (_: Int, _: Int, _: Int) -> Void
     
     init(
         variant: SurveyVariant,
         isLoading: Bool,
+        onNotNow: (() -> Void)? = nil,
         onSurveyCompleted: @escaping (_: Int, _: Int, _: Int) -> Void
     ) {
         self.variant = variant
         self.isLoading = isLoading
+        self.onNotNow = onNotNow
         self.onSurveyCompleted = onSurveyCompleted
         
         if variant == .pre {
@@ -108,6 +111,20 @@ struct SurveyView: View {
         Spacer()
 
         HStack {
+            if onNotNow != nil {
+                Button(action: {self.onNotNow?()}, label: {
+                    Label(
+                        "Not now",
+                        systemImage: "arrow.left"
+                    )
+                    .bold()
+                    .font(.system(size: 13))
+                    .frame(height: 18)
+                    .labelStyle(.titleAndIcon)
+                })
+                .cornerRadius(50)
+                .buttonStyle(.borderless)
+            }
             Spacer()
             Button(
                 action: {

@@ -129,7 +129,7 @@ class StreamDelegate: NSObject, URLSessionDataDelegate {
                         ChatMessageChunk.self, from: jsonData)
                 else {
                     print("Failed to decode: \(content)")
-                    return nil
+                    return .error(ChatAPIError.invalidEventFormat)
                 }
                 return .chunk(chunk)
             }

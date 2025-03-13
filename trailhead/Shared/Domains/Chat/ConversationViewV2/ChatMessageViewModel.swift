@@ -453,11 +453,13 @@ struct MessageAdapter {
                 return nil
             }
             
-            print("[MessageAdapter] Creating stored pair, hasUser: \(userMsg != nil), hasAI: \(aiMsg != nil)")
+            
+            let createdAt = (userMsg ?? aiMsg)!.createdAt
+            print("[MessageAdapter] Creating stored pair, hasUser: \(userMsg != nil), hasAI: \(aiMsg != nil) \(createdAt)")
             
             return MessagePair(
                 id: UUID().uuidString,
-                timestamp: (userMsg ?? aiMsg)!.createdAt,
+                timestamp: createdAt,
                 userMessage: userMsg?.content,
                 aiMessage: aiMsg?.content,
                 streamState: .stored,
@@ -467,7 +469,7 @@ struct MessageAdapter {
         }
         
         print("[MessageAdapter] Created \(pairs.count) pairs")
-        return pairs
+        return pairs.sorted { $0.timestamp < $1.timestamp }
     }
     
     // Create AI-only message

@@ -48,6 +48,11 @@ struct ContentView: View {
   
         if authStore.isAuthenticated && authStore.isOnboardingCompleted {
             VStack {
+//                ConversationViewV2(config: ConversationConfig(
+//                    sessionApiClient: SessionAPIClient(authProvider: authStore),
+//                    authProvider: authStore, slug: "unguided-open-v0", userId: authStore.userId!, sessionLogId: nil)
+//                )
+                
                 ApplicationView()
                     .navigationBarBackButtonHidden()
                     .environment(self.authStore)
@@ -55,9 +60,6 @@ struct ContentView: View {
                     .environment(self.sessionAPIClient)
                     .environment(self.checkInAPIClient)
                     .environment(self.cidiAPIClient)
-                
-
-                
                     .refreshSessionOnAppear(self.authStore)
                     .onAppear {
                         if let userId = authStore.userId {
@@ -67,7 +69,7 @@ struct ContentView: View {
                     .onChange(of: authStore.userId) { _, userId in
                         if let userId = userId {
                             self.fetchData(userId: userId)
-                            }
+                        }
                     }
             }
         } else if inInitialConversation, let userId = authStore.userId, let initialConversationSessionLogId = initialConversationSessionLogId {

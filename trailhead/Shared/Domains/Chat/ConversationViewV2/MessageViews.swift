@@ -107,8 +107,7 @@ struct StreamingMessageWithPlaceholderView: View {
         }
         .frame(
             maxWidth: .infinity,
-            idealHeight: self.isMakingRoomForStream ? max(0,scrollViewHeight - 50) : nil,
-            maxHeight: scrollViewHeight,
+            minHeight: self.isMakingRoomForStream ? scrollViewHeight : nil,
             alignment: .topTrailing
         )
     }

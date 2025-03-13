@@ -183,6 +183,7 @@ extension AuthStore {
             scheduleSessionRefresh(after: expiresIn - 60)
         } catch {
             print("[AUTH] Session refresh failed: \(error)")
+            self.isAuthenticated = false
         }
     }
 
