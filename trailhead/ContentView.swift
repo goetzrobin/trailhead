@@ -81,6 +81,7 @@ struct ContentView: View {
                         slug: "onboarding-v0",
                         userId: userId,
                         sessionLogId: initialConversationSessionLogId,
+                        sessionLogStatus: .inProgress,
                         maxSteps: 5,
                         customEndConversationLabel: "Complete onboarding!",
                         onSessionEnded: {
@@ -93,6 +94,7 @@ struct ContentView: View {
                         isAutoStartingWithoutPreSurvey: true
                     )
             )
+            .padding(.top, 12)
             } else {
             OnboardingView(
                 showingAuth: $showingAuth,

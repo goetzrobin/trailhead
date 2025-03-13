@@ -95,10 +95,12 @@ struct ConversationViewV2: View {
             print(
                 "[ConversationView2] loading initial messages for \(sessionLogId.uuidString)"
             )
-            self.chatMessageViewModel.fetchStoredMessages(for: sessionLogId)
             if isAutoStartingWithoutPreSurvey {
                 self.isShowingMessageView = true
+                self.isShowingTextView = true
                 self.chatMessageViewModel.haveSamReachOut()
+            } else {
+                self.chatMessageViewModel.fetchStoredMessages(for: sessionLogId)
             }
         } else {
             print(
@@ -125,7 +127,7 @@ struct ConversationViewV2: View {
     }
     
     private func handleOnLoadingExistingMessagesChange(_ isLoading: Bool) {
-        print("[ConversationView2] isLoadingExistingMessagesChange: \(isLoading)")
+        print("[ConversationView2] isLoadingExistingMessagesChange: \(isLoading) \(self.sessionManagementViewModel.sessionLogStatus)")
         if !isLoading {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation {
