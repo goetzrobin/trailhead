@@ -94,7 +94,7 @@ struct ContentView: View {
                         isAutoStartingWithoutPreSurvey: true
                     )
             )
-            .padding(.top, 12)
+            .padding(.top, 24)
             } else {
             OnboardingView(
                 showingAuth: $showingAuth,
