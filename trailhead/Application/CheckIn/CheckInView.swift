@@ -5,10 +5,14 @@ import SwiftUI
 struct CheckInView: View {
     @Environment(AppRouter.self) var router: AppRouter
     @Environment(CheckInAPIClient.self) var checkInApiClient: CheckInAPIClient
+    @Environment(SessionAPIClient.self) var sessionApiClient: SessionAPIClient
+    @Environment(AuthStore.self) var authStore: AuthStore
     @State private var viewModel = CheckInAnimationViewModel()
     @State private var circleFromTop: CGFloat = 999.0
     @State private var isDoingCheckIn = false
-    
+
+    @State private var isContinuingCheckInForSessionLog: SessionLog? = nil
+
     private var checkIns: [SessionLog] {
         self.checkInApiClient.fetchCheckInLogsStatus.data ?? []
     }
@@ -74,7 +78,9 @@ struct CheckInView: View {
                                 "AnimatedCircleView"
                             )
                             
-                            CheckInListView(checkIns: self.checkIns)
+                            CheckInListView(checkIns: self.checkIns) {
+                                sessionLog in self.isContinuingCheckInForSessionLog = sessionLog
+                            }
                                 .id("CheckListView")
                         }
                     }.onScrollPhaseChange({ _, newPhase in
@@ -87,6 +93,42 @@ struct CheckInView: View {
             }
             .fullScreenCover(
                 isPresented: $isDoingCheckIn, content: CheckInFlowView.init)
+            .fullScreenCover(
+                isPresented: Binding(get: {isContinuingCheckInForSessionLog != nil}, set: {newValue in
+                    if !newValue { self.isContinuingCheckInForSessionLog = nil}
+                })) {
+                    if let userId = authStore.userId, let isContinuingCheckInForSessionLog = self.isContinuingCheckInForSessionLog {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Button(action:   {withAnimation {
+                                    self.isContinuingCheckInForSessionLog = nil
+                                }}, label: {
+                                    Label("Come back later", systemImage: "xmark").labelStyle(.iconOnly)
+                                })
+                            }
+                            .padding()
+                            ConversationViewV2(config: ConversationConfig(
+                                sessionApiClient: sessionApiClient,
+                                authProvider: authStore,
+                                slug: "unguided-open-v0",
+                                userId: userId,
+                                sessionLogId: isContinuingCheckInForSessionLog.id,
+                                sessionLogStatus: isContinuingCheckInForSessionLog.status,
+                                maxSteps: nil,
+                                customEndConversationLabel: "End Check-In",
+                                onSessionEnded: {
+                                    self.checkInApiClient.fetchCheckInLogs(for: userId)
+                                },
+                                onNotNow: {
+                                    withAnimation {
+                                        self.isContinuingCheckInForSessionLog = nil
+                                    }
+                                }
+                            ))
+                        }
+                    }
+                }
             .onAppear {
                 self.viewModel.shouldAnimate = self.shouldAnimate
             }
