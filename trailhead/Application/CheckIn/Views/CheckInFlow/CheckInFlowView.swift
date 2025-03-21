@@ -67,23 +67,29 @@ struct CheckInFlowView: View {
                 }.padding(.horizontal)
             }
             if status == .inConversation, let userId = authStore.userId {
-                ConversationViewV2(config: ConversationConfig(
-                    sessionApiClient: sessionApiClient,
-                    authProvider: authStore,
-                    slug: "unguided-open-v0",
-                    userId: userId,
-                    sessionLogId: nil,
-                    maxSteps: nil,
-                    onSessionEnded: {
-                        self.checkInApiClient.fetchCheckInLogs(for: userId)
+                VStack {
+                    CloseHeader {
                         self.dismiss()
-                    },
-                    onNotNow: {
-                        withAnimation {
-                            self.status = .pickingTopic
-                        }
                     }
-                ))
+                    .padding(.horizontal)
+                    ConversationViewV2(config: ConversationConfig(
+                        sessionApiClient: sessionApiClient,
+                        authProvider: authStore,
+                        slug: "unguided-open-v0",
+                        userId: userId,
+                        sessionLogId: nil,
+                        maxSteps: nil,
+                        onSessionEnded: {
+                            self.checkInApiClient.fetchCheckInLogs(for: userId)
+                            self.dismiss()
+                        },
+                        onNotNow: {
+                            withAnimation {
+                                self.status = .pickingTopic
+                            }
+                        }
+                    ))
+                }
             }
         }
         .frame(maxHeight: .infinity)
