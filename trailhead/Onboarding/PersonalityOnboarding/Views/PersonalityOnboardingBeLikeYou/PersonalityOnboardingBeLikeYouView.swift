@@ -128,7 +128,7 @@ struct PersonalityOnboardingBeLikeYouView: View {
 
 #Preview {
     @Previewable @State var appRouter = AppRouter()
-    @Previewable @State var personalityStore = PersonalityOnboardingBeLikeYouStore()
+    @Previewable @State var personalityStore = PersonalityOnboardingBeLikeYouStore(isStudentAthlete: false)
     NavigationStack(path: $appRouter.path) {
         PersonalityOnboardingBeLikeYouView(
             currentStepProgress: 0.5,

@@ -7,7 +7,7 @@
 import SwiftUI
 import Observation
 
-let PROMPT_RESPONSES = [
+let ATHLETE_PROMPT_RESPONSES = [
     PromptOptionAndResponse(option: PromptOption(id: UUID(uuidString: "7c64f8f6-1ed0-4449-90fa-f9c7df7adfc1")!, prompt: "When you think about your life after college (athletics), what excites you the most? What worries you the most?"), response: nil),
     PromptOptionAndResponse(option: PromptOption(id: UUID(uuidString: "b689222f-e43b-4430-999f-17e1e2fc1c7c")!, prompt: "Have you received any formal support or guidance about preparing for this transition? If so, what was it, and was it helpful?"), response: nil),
     PromptOptionAndResponse(option: PromptOption(id: UUID(uuidString: "e5e8eabd-a988-4bbb-aee1-2cb42f86167c")!, prompt: "Many athletes experience a shift in their identity when they leave their sport. How would you describe your identity now, and how do you think it will change when you’re no longer competing?"), response: nil),
@@ -18,9 +18,17 @@ let PROMPT_RESPONSES = [
     PromptOptionAndResponse(option: PromptOption(id: UUID(uuidString: "46ee672d-0f19-4f72-945a-4f57a2b5d610")!, prompt: "A year from now, what would ‘success’ look like for you in terms of your transition from college sports?"), response: nil),
 ]
 
+let GRAD_STUDENT_PROMPT_RESPONSES = [
+    PromptOptionAndResponse(option: PromptOption(id: UUID(uuidString: "11d0e1ef-92b9-4f33-ba19-91eec543991f")!, prompt: "My definition of success is"), response: nil),
+    PromptOptionAndResponse(option: PromptOption(id: UUID(uuidString: "6f69ff2a-c6dc-4abe-a98c-1b3ed8ca7ef9")!, prompt: "A challenge I'm working to overcome is"), response: nil),
+    PromptOptionAndResponse(option: PromptOption(id: UUID(uuidString: "7c64f8f6-1ed0-4449-90fa-f9c7df7adfc1")!, prompt: "When you think about your life after college (athletics), what excites you the most? What worries you the most?"), response: nil),
+    PromptOptionAndResponse(option: PromptOption(id: UUID(uuidString: "427680e5-a17c-460a-b4ff-a4b260be23ab")!, prompt: "When facing challenges—whether in school or life—who do you typically turn to for advice or support?"), response: nil),
+]
+
 @Observable class PersonalityOnboardingBeLikeYouStore {
+    var isStudentAthlete: Bool = true
     // Keep your data - no change to array structure
-    var promptResponses: [PromptOptionAndResponse] = PROMPT_RESPONSES
+    var promptResponses: [PromptOptionAndResponse]
     
     // Single state for editing - much simpler than before
     var editingIndex: Int?
@@ -59,6 +67,11 @@ let PROMPT_RESPONSES = [
     var currentPrompt: String {
         print("Index of current prompt: \(self.editingIndex)")
        return self.editingIndex != nil ? self.promptResponses[self.editingIndex!].option.prompt : "\(self.editingIndex)"
+    }
+    
+    init(isStudentAthlete: Bool) {
+        self.isStudentAthlete = isStudentAthlete
+        self.promptResponses = isStudentAthlete ? ATHLETE_PROMPT_RESPONSES : GRAD_STUDENT_PROMPT_RESPONSES
     }
     
     // Simple actions

@@ -14,12 +14,15 @@ struct UserOnboardingReferredByView: View {
     }
     
     private let onBack: () -> Void
+    private let onSkip: () -> Void
     private let onContinue: () -> Void
     
     init(
         onBack: @escaping () -> Void,
+        onSkip: @escaping () -> Void,
         onContinue: @escaping () -> Void) {
         self.onBack = onBack
+        self.onSkip = onSkip
         self.onContinue = onContinue
     }
 
@@ -33,10 +36,13 @@ struct UserOnboardingReferredByView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .inputStyle()
-        } onBack: {
+        }
+        onBack: {
             self.onBack()
         } onContinue: {
             self.onContinue()
+        } onSkip: {
+            self.onSkip()
         }
     }
 }

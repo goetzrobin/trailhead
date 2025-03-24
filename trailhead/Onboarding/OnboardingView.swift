@@ -19,7 +19,7 @@ struct OnboardingView: View {
     @State var router = AppRouter()
     @State private var isUserConsentGiven = false
     @State private var isSignUpCompleted = false
-    @State private var isSkippingPrompts = false
+    @State private var isStudentAthlete = true
 
     var body: some View {
         NavigationStack(path: $router.path) {
@@ -68,11 +68,12 @@ struct OnboardingView: View {
                         router: self.router,
                         userApiClient: self.userApiClient,
                         userId: self.auth.userId,
-                        onFlowComplete: {
+                        onFlowComplete: { isStudentAthlete in
                             self.router.path.append(
                                 OnboardingPath
                                     .personalityOnboarding
                             )
+                            self.isStudentAthlete = isStudentAthlete
                         }
                     )
                     .navigationBarBackButtonHidden()
@@ -81,7 +82,7 @@ struct OnboardingView: View {
                         router: self.router,
                         userApiClient: self.userApiClient,
                         userID: self.auth.userId,
-                        isSkippingPrompts: self.isSkippingPrompts,
+                        isStudentAthlete: self.isStudentAthlete,
                         onFlowComplete: {
                             self.router.path.append(
                                 OnboardingPath

@@ -52,8 +52,7 @@ struct ContentView: View {
 //                    sessionApiClient: SessionAPIClient(authProvider: authStore),
 //                    authProvider: authStore, slug: "unguided-open-v0", userId: authStore.userId!, sessionLogId: nil)
 //                )
-                
-                ApplicationView()
+                ApplicationView(userName: self.userAPIClient.fetchUserStatus.data?.name ?? "Loading...")
                     .navigationBarBackButtonHidden()
                     .environment(self.authStore)
                     .environment(self.userAPIClient)

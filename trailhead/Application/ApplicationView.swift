@@ -45,6 +45,8 @@ struct ApplicationView: View {
     @State private var growthRouter = AppRouter()
     @State private var profileRouter = AppRouter()
     @State private var layoutService = ApplicationViewLayoutService()
+    
+    let userName: String
 
     var body: some View {
         @Bindable var checkInRouter = checkInRouter
@@ -82,7 +84,7 @@ struct ApplicationView: View {
                 }
                 .tabItem {
                     Image(systemName: "circle.fill")
-                    Text("Robin")
+                    Text(self.userName)
                 }
                 .tag(ApplicationTab.profile)
                 .environment(profileRouter)
@@ -128,7 +130,7 @@ struct GradientOverlayModifier: ViewModifier {
 
 #Preview {
     @Previewable @State var auth = AuthStore()
-    ApplicationView()
+    ApplicationView(userName: "")
         .environment(auth)
         .environment(CheckInAPIClient(authProvider: auth))
         .environment(CidiAPIClient(authProvider: auth))

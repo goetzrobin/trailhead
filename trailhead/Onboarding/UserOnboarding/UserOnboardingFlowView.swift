@@ -10,7 +10,7 @@ struct UserOnboardingFlowView: View {
     let router: AppRouter
     let userApiClient: UserAPIClient
     let userId: UUID?
-    let onFlowComplete: () -> Void
+    let onFlowComplete: (_: Bool) -> Void
 
     @State var userOnboardingStore = UserOnboardingStore()
 
@@ -94,6 +94,11 @@ struct UserOnboardingFlowView: View {
             case .referredBy:
                 UserOnboardingReferredByView(
                     onBack: { self.router.path.removeLast() },
+                    onSkip: {
+                        self.router.path.append(
+                            UserOnboardingPath
+                                .cohort)
+                    },
                     onContinue: {
                         self.router.path.append(
                             UserOnboardingPath
@@ -127,7 +132,7 @@ struct UserOnboardingFlowView: View {
                     userId: self.userId,
                     data: self.userOnboardingStore.data
                 ) {
-                    self.onFlowComplete()
+                    self.onFlowComplete(self.userOnboardingStore.isStudentAthlete)
                     print("completed")
                 }.navigationBarBackButtonHidden()
             }
@@ -137,8 +142,8 @@ struct UserOnboardingFlowView: View {
 #Preview {
     @Previewable @Bindable var router = AppRouter()
     NavigationStack(path: $router.path) {
-        UserOnboardingFlowView(router: router, userApiClient: UserAPIClient(authProvider: AuthStore()), userId: UUID()) {
-            print("Flow complete")
+        UserOnboardingFlowView(router: router, userApiClient: UserAPIClient(authProvider: AuthStore()), userId: UUID()) { isStudentAthlete in
+            print("Flow complete \(isStudentAthlete)")
         }
     }
 }

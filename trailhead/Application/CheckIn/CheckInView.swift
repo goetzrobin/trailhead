@@ -103,6 +103,7 @@ struct CheckInView: View {
                                 Spacer()
                                 Button(action:   {withAnimation {
                                     self.isContinuingCheckInForSessionLog = nil
+                                    self.checkInApiClient.fetchCheckInLogs(for: userId)
                                 }}, label: {
                                     Label("Come back later", systemImage: "xmark").labelStyle(.iconOnly)
                                 })

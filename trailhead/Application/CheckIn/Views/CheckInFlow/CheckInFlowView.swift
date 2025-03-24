@@ -70,6 +70,7 @@ struct CheckInFlowView: View {
                 VStack {
                     CloseHeader {
                         self.dismiss()
+                        self.checkInApiClient.fetchCheckInLogs(for: userId)
                     }
                     .padding(.horizontal)
                     ConversationViewV2(config: ConversationConfig(

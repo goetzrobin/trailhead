@@ -11,14 +11,23 @@ struct PersonalityOnboardingFlowView: View {
     let router: AppRouter
     let userApiClient: UserAPIClient
     let userID: UUID?
-    let isSkippingPrompts: Bool
+    let isStudentAthlete: Bool
     let onFlowComplete: () -> Void
 
     @State var progressStore = PersonalityOnboardingProgressStore()
     @State var excitedAboutStore = PersonalityOnboardingExcitedAboutStore()
     @State var mentorTraitsStore = PersonalityOnboardingMentorTraitsStore()
-    @State var beLikeYouStore =
-        PersonalityOnboardingBeLikeYouStore()
+    @State var beLikeYouStore: PersonalityOnboardingBeLikeYouStore
+    
+    init(router: AppRouter, userApiClient: UserAPIClient, userID: UUID?, isStudentAthlete: Bool, onFlowComplete: @escaping () -> Void) {
+        self.router = router
+        self.userApiClient = userApiClient
+        self.userID = userID
+        self.isStudentAthlete = isStudentAthlete
+        self.onFlowComplete = onFlowComplete
+        
+        self.beLikeYouStore = PersonalityOnboardingBeLikeYouStore(isStudentAthlete: self.isStudentAthlete)
+    }
 
     var body: some View {
         PersonalityOnboardingIntroView {
@@ -127,7 +136,7 @@ struct PersonalityOnboardingFlowView: View {
 #Preview {
     @Bindable var router = AppRouter()
     NavigationStack(path: $router.path) {
-        PersonalityOnboardingFlowView(router: router, userApiClient: UserAPIClient(authProvider: AuthStore()), userID: UUID(), isSkippingPrompts: false) {
+        PersonalityOnboardingFlowView(router: router, userApiClient: UserAPIClient(authProvider: AuthStore()), userID: UUID(), isStudentAthlete: false) {
             print("Completed flow")
         }
     }

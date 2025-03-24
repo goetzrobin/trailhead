@@ -133,6 +133,10 @@ let DIVISION_OPTIONS: [OnboardingOption] = [
 
     var selectedNcaaDivision: OnboardingOption?
     var customNcaaDivision: String?
+    
+    var isStudentAthlete: Bool {
+        return self.selectedCompetitionLevel?.value == "college"
+    }
 
     var data: UserUpdateData {
         var cohort = ""
